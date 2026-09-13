@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "391634203414",
+    "project_id": "almaystro-afbcb",
+    "storage_bucket": "almaystro-afbcb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:391634203414:android:3e40eed2c45025c13e9637",
+        "android_client_info": {
+          "package_name": "com.almaystro.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnT_tYEPa9CrpqD5Ffx8XvbD-BngTmFFc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
