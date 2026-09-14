@@ -878,4 +878,4 @@ public class MainActivity extends Activity {
                 new GradientDrawable();
 
         bg.setColor(cardColor());
-        bg.setCornerRadius(dp(22))
+        bg.setCornerRadius(dp(22));
