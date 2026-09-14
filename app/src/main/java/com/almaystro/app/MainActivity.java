@@ -6,18 +6,27 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
-import android.widget.ImageView;
+import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Button;
+import android.widget.ImageView;
 
 public class MainActivity extends Activity {
+
+    LinearLayout mainLayout;
+
+    int gold = Color.rgb(224, 190, 70);
+    int darkGreen = Color.rgb(5, 38, 27);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        showWelcomeScreen();
+    }
 
-        GradientDrawable background = new GradientDrawable(
+    private GradientDrawable makeBackground() {
+        return new GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 new int[]{
                         Color.rgb(5, 38, 27),
@@ -25,19 +34,53 @@ public class MainActivity extends Activity {
                         Color.rgb(5, 38, 27)
                 }
         );
+    }
 
-        LinearLayout mainLayout = new LinearLayout(this);
+    private Button makeButton(String text) {
+        Button button = new Button(this);
+        button.setText(text);
+        button.setTextSize(21);
+        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        button.setTextColor(darkGreen);
+
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(gold);
+        background.setCornerRadius(40);
+
+        button.setBackground(background);
+
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        70
+                );
+
+        params.setMargins(35, 12, 35, 12);
+        button.setLayoutParams(params);
+
+        return button;
+    }
+
+    private TextView makeText(String text, float size, int color) {
+        TextView view = new TextView(this);
+        view.setText(text);
+        view.setTextSize(size);
+        view.setTextColor(color);
+        view.setGravity(Gravity.CENTER);
+        view.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        view.setPadding(10, 10, 10, 10);
+        return view;
+    }
+
+    private void showWelcomeScreen() {
+
+        mainLayout = new LinearLayout(this);
         mainLayout.setOrientation(LinearLayout.VERTICAL);
         mainLayout.setGravity(Gravity.CENTER);
         mainLayout.setPadding(30, 35, 30, 35);
-        mainLayout.setBackground(background);
+        mainLayout.setBackground(makeBackground());
 
-        TextView top = new TextView(this);
-        top.setText("✦  ❖  ✦");
-        top.setTextSize(25);
-        top.setTextColor(Color.rgb(224, 190, 70));
-        top.setGravity(Gravity.CENTER);
-        mainLayout.addView(top);
+        mainLayout.addView(makeText("✦  ❖  ✦", 25, gold));
 
         ImageView logo = new ImageView(this);
         logo.setImageResource(R.drawable.maestro);
@@ -48,66 +91,120 @@ public class MainActivity extends Activity {
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         280
                 );
+
         imageParams.setMargins(0, 20, 0, 10);
         mainLayout.addView(logo, imageParams);
 
-        TextView title = new TextView(this);
-        title.setText("المايسترو");
-        title.setTextSize(40);
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        title.setTextColor(Color.rgb(230, 194, 70));
-        title.setGravity(Gravity.CENTER);
-        mainLayout.addView(title);
+        mainLayout.addView(makeText("المايسترو", 40, gold));
+        mainLayout.addView(makeText("المايسترو شريف هيبه", 22, Color.WHITE));
 
-        TextView teacher = new TextView(this);
-        teacher.setText("المايسترو شريف هيبه");
-        teacher.setTextSize(22);
-        teacher.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        teacher.setTextColor(Color.WHITE);
-        teacher.setGravity(Gravity.CENTER);
-        mainLayout.addView(teacher);
+        TextView subtitle = makeText(
+                "هتتعلم التاريخ ببساطة",
+                19,
+                Color.LTGRAY
+        );
 
-        TextView subtitle = new TextView(this);
-        subtitle.setText("هتتعلم التاريخ ببساطة");
-        subtitle.setTextSize(19);
-        subtitle.setTextColor(Color.LTGRAY);
-        subtitle.setGravity(Gravity.CENTER);
         mainLayout.addView(subtitle);
+        mainLayout.addView(makeText("❖", 28, gold));
 
-        TextView middle = new TextView(this);
-        middle.setText("❖");
-        middle.setTextSize(28);
-        middle.setTextColor(Color.rgb(224, 190, 70));
-        middle.setGravity(Gravity.CENTER);
-        mainLayout.addView(middle);
+        Button startButton = makeButton("ابدأ الآن");
 
-        Button startButton = new Button(this);
-        startButton.setText("ابدأ الآن");
-        startButton.setTextSize(20);
-        startButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        startButton.setTextColor(Color.rgb(5, 38, 27));
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showRoleScreen();
+            }
+        });
 
-        GradientDrawable buttonBackground = new GradientDrawable();
-        buttonBackground.setColor(Color.rgb(224, 190, 70));
-        buttonBackground.setCornerRadius(40);
-
-        startButton.setBackground(buttonBackground);
-
-        LinearLayout.LayoutParams buttonParams =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        65
-                );
-        buttonParams.setMargins(45, 10, 45, 10);
-        mainLayout.addView(startButton, buttonParams);
-
-        TextView bottom = new TextView(this);
-        bottom.setText("✦  ❖  ✦");
-        bottom.setTextSize(22);
-        bottom.setTextColor(Color.rgb(224, 190, 70));
-        bottom.setGravity(Gravity.CENTER);
-        mainLayout.addView(bottom);
+        mainLayout.addView(startButton);
+        mainLayout.addView(makeText("✦  ❖  ✦", 22, gold));
 
         setContentView(mainLayout);
     }
-                         }
+
+    private void showRoleScreen() {
+
+        mainLayout.removeAllViews();
+
+        mainLayout.setGravity(Gravity.CENTER);
+        mainLayout.setPadding(30, 40, 30, 40);
+
+        mainLayout.addView(makeText("✦  ❖  ✦", 25, gold));
+        mainLayout.addView(makeText("اختر نوع الدخول", 30, gold));
+
+        TextView description = makeText(
+                "من فضلك اختر هل أنت طالب أم مدرس",
+                18,
+                Color.WHITE
+        );
+
+        description.setPadding(10, 25, 10, 35);
+        mainLayout.addView(description);
+
+        Button studentButton = makeButton("أنا طالب");
+
+        studentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showMessageScreen("دخول الطالب");
+            }
+        });
+
+        mainLayout.addView(studentButton);
+
+        Button teacherButton = makeButton("أنا مدرس");
+
+        teacherButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showMessageScreen("دخول المدرس");
+            }
+        });
+
+        mainLayout.addView(teacherButton);
+
+        Button backButton = makeButton("رجوع");
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showWelcomeScreen();
+            }
+        });
+
+        mainLayout.addView(backButton);
+
+        mainLayout.addView(makeText("✦  ❖  ✦", 22, gold));
+
+        setContentView(mainLayout);
+    }
+
+    private void showMessageScreen(String title) {
+
+        mainLayout.removeAllViews();
+
+        mainLayout.setGravity(Gravity.CENTER);
+
+        mainLayout.addView(makeText("✦  ❖  ✦", 25, gold));
+        mainLayout.addView(makeText(title, 30, gold));
+
+        mainLayout.addView(makeText(
+                "هذه الشاشة سيتم تجهيزها في الخطوة القادمة",
+                18,
+                Color.WHITE
+        ));
+
+        Button backButton = makeButton("رجوع");
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showRoleScreen();
+            }
+        });
+
+        mainLayout.addView(backButton);
+
+        setContentView(mainLayout);
+    }
+            }
