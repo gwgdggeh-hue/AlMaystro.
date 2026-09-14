@@ -11,289 +11,433 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-    LinearLayout mainLayout;
+    private LinearLayout content;
 
-    int gold = Color.rgb(224, 190, 70);
-    int darkGreen = Color.rgb(5, 38, 27);
+    private final int GOLD = Color.rgb(224, 190, 70);
+    private final int DARK_GREEN = Color.rgb(5, 38, 27);
+    private final int GREEN = Color.rgb(14, 70, 48);
+    private final int WHITE = Color.WHITE;
+    private final int LIGHT = Color.rgb(220, 220, 220);
 
     private int dp(int value) {
-        return (int) (value * getResources()
-                .getDisplayMetrics().density + 0.5f);
+        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        showWelcomeScreen();
+        showWelcome();
     }
 
-    private GradientDrawable makeBackground() {
+    private GradientDrawable background() {
         return new GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 new int[]{
-                        Color.rgb(5, 38, 27),
-                        Color.rgb(14, 70, 48),
-                        Color.rgb(5, 38, 27)
+                        DARK_GREEN,
+                        GREEN,
+                        DARK_GREEN
                 }
         );
     }
 
-    private TextView makeText(String text, float size, int color) {
-        TextView view = new TextView(this);
-
-        view.setText(text);
-        view.setTextSize(size);
-        view.setTextColor(color);
-        view.setGravity(Gravity.CENTER);
-        view.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        view.setIncludeFontPadding(true);
-        view.setPadding(dp(8), dp(8), dp(8), dp(8));
-
-        return view;
+    private TextView text(String value, float size, int color) {
+        TextView t = new TextView(this);
+        t.setText(value);
+        t.setTextSize(size);
+        t.setTextColor(color);
+        t.setGravity(Gravity.CENTER);
+        t.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        t.setIncludeFontPadding(true);
+        t.setPadding(dp(8), dp(6), dp(8), dp(6));
+        return t;
     }
 
-    private TextView makeButton(String text) {
-        TextView button = new TextView(this);
+    private TextView button(String value) {
+        TextView b = new TextView(this);
+        b.setText(value);
+        b.setTextSize(20);
+        b.setTextColor(DARK_GREEN);
+        b.setGravity(Gravity.CENTER);
+        b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        b.setIncludeFontPadding(true);
+        b.setPadding(dp(8), dp(4), dp(8), dp(4));
+        b.setClickable(true);
+        b.setFocusable(true);
 
-        button.setText(text);
-        button.setTextSize(20);
-        button.setTextColor(darkGreen);
-        button.setGravity(Gravity.CENTER);
-        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        button.setPadding(dp(8), dp(5), dp(8), dp(5));
-        button.setClickable(true);
-        button.setFocusable(true);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(GOLD);
+        bg.setCornerRadius(dp(35));
+        b.setBackground(bg);
 
-        GradientDrawable background = new GradientDrawable();
-        background.setColor(gold);
-        background.setCornerRadius(dp(40));
-
-        button.setBackground(background);
-
-        LinearLayout.LayoutParams params =
+        LinearLayout.LayoutParams p =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(65)
+                        dp(64)
                 );
 
-        params.setMargins(dp(25), dp(8), dp(25), dp(8));
-        button.setLayoutParams(params);
+        p.setMargins(dp(25), dp(7), dp(25), dp(7));
+        b.setLayoutParams(p);
 
-        return button;
+        return b;
     }
 
-    private EditText makeInput(String hint) {
-        EditText input = new EditText(this);
+    private EditText input(String hint) {
+        EditText e = new EditText(this);
 
-        input.setHint(hint);
-        input.setTextSize(18);
-        input.setTextColor(Color.WHITE);
-        input.setHintTextColor(Color.LTGRAY);
-        input.setGravity(Gravity.CENTER);
-        input.setSingleLine(true);
-        input.setPadding(dp(15), 0, dp(15), 0);
+        e.setHint(hint);
+        e.setTextSize(18);
+        e.setTextColor(WHITE);
+        e.setHintTextColor(LIGHT);
+        e.setGravity(Gravity.CENTER);
+        e.setSingleLine(true);
+        e.setPadding(dp(15), 0, dp(15), 0);
 
-        GradientDrawable background = new GradientDrawable();
-        background.setColor(Color.rgb(20, 85, 59));
-        background.setCornerRadius(dp(20));
-        background.setStroke(dp(1), gold);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Color.rgb(20, 85, 59));
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(1), GOLD);
+        e.setBackground(bg);
 
-        input.setBackground(background);
-
-        LinearLayout.LayoutParams params =
+        LinearLayout.LayoutParams p =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(60)
+                        dp(58)
                 );
 
-        params.setMargins(dp(20), dp(8), dp(20), dp(8));
-        input.setLayoutParams(params);
+        p.setMargins(dp(20), dp(7), dp(20), dp(7));
+        e.setLayoutParams(p);
 
-        return input;
+        return e;
     }
 
-    private void prepareLayout() {
-        mainLayout = new LinearLayout(this);
-        mainLayout.setOrientation(LinearLayout.VERTICAL);
-        mainLayout.setGravity(Gravity.CENTER);
-        mainLayout.setPadding(dp(25), dp(25), dp(25), dp(25));
-        mainLayout.setBackground(makeBackground());
+    private void createScreen() {
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setGravity(Gravity.CENTER_HORIZONTAL);
+        root.setPadding(dp(20), dp(20), dp(20), dp(20));
+        root.setBackground(background());
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.setBackground(background());
+
+        content = root;
+
+        scroll.addView(root);
+        setContentView(scroll);
     }
 
-    private void showWelcomeScreen() {
-        prepareLayout();
-
-        mainLayout.addView(makeText("✦  ❖  ✦", 25, gold));
-
+    private void addLogo() {
         ImageView logo = new ImageView(this);
         logo.setImageResource(R.drawable.maestro);
         logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 
-        LinearLayout.LayoutParams imageParams =
+        LinearLayout.LayoutParams p =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(230)
+                        dp(190)
                 );
 
-        imageParams.setMargins(0, dp(10), 0, dp(5));
-        mainLayout.addView(logo, imageParams);
-
-        mainLayout.addView(makeText("المايسترو", 38, gold));
-        mainLayout.addView(makeText("المايسترو شريف هيبه", 21, Color.WHITE));
-        mainLayout.addView(makeText("هتتعلم التاريخ ببساطة", 18, Color.LTGRAY));
-        mainLayout.addView(makeText("❖", 26, gold));
-
-        TextView startButton = makeButton("ابدأ الآن");
-
-        startButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoleScreen();
-            }
-        });
-
-        mainLayout.addView(startButton);
-        mainLayout.addView(makeText("✦  ❖  ✦", 22, gold));
-
-        setContentView(mainLayout);
+        p.setMargins(0, dp(5), 0, dp(5));
+        content.addView(logo, p);
     }
 
-    private void showRoleScreen() {
-        prepareLayout();
+    private void addHeader(String title, String subtitle) {
+        content.addView(text("✦  ❖  ✦", 24, GOLD));
+        content.addView(text(title, 32, GOLD));
 
-        mainLayout.addView(makeText("✦  ❖  ✦", 25, gold));
-        mainLayout.addView(makeText("اختر نوع الدخول", 30, gold));
+        if (subtitle != null && !subtitle.isEmpty()) {
+            content.addView(text(subtitle, 18, WHITE));
+        }
 
-        mainLayout.addView(makeText(
-                "من فضلك اختر هل أنت طالب أم مدرس",
-                18,
-                Color.WHITE
-        ));
+        content.addView(text("❖", 25, GOLD));
+    }
 
-        TextView studentButton = makeButton("أنا طالب");
+    private void showWelcome() {
+        createScreen();
 
-        studentButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showStudentLogin();
-            }
-        });
+        addHeader("المايسترو", "المايسترو شريف هيبه");
 
-        mainLayout.addView(studentButton);
+        content.addView(
+                text("هتتعلم التاريخ ببساطة", 19, LIGHT)
+        );
 
-        TextView teacherButton = makeButton("أنا مدرس");
+        addLogo();
 
-        teacherButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showMessageScreen("دخول المدرس");
-            }
-        });
+        TextView start = button("ابدأ الآن");
 
-        mainLayout.addView(teacherButton);
+        start.setOnClickListener(v -> showRoles());
 
-        TextView backButton = makeButton("رجوع");
+        content.addView(start);
 
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showWelcomeScreen();
-            }
-        });
+        content.addView(text("✦  ❖  ✦", 22, GOLD));
+    }
 
-        mainLayout.addView(backButton);
-        mainLayout.addView(makeText("✦  ❖  ✦", 22, gold));
+    private void showRoles() {
+        createScreen();
 
-        setContentView(mainLayout);
+        addHeader(
+                "اختيار نوع الدخول",
+                "من فضلك اختر طريقة الدخول"
+        );
+
+        TextView student = button("أنا طالب");
+
+        student.setOnClickListener(v -> showStudentLogin());
+
+        content.addView(student);
+
+        TextView teacher = button("أنا مدرس");
+
+        teacher.setOnClickListener(v -> showTeacherLogin());
+
+        content.addView(teacher);
+
+        TextView back = button("رجوع");
+
+        back.setOnClickListener(v -> showWelcome());
+
+        content.addView(back);
+
+        content.addView(text("✦  ❖  ✦", 22, GOLD));
     }
 
     private void showStudentLogin() {
-        prepareLayout();
+        createScreen();
 
-        mainLayout.addView(makeText("✦  ❖  ✦", 25, gold));
-        mainLayout.addView(makeText("دخول الطالب", 30, gold));
+        addHeader(
+                "دخول الطالب",
+                "اكتب بياناتك للدخول إلى الامتحان"
+        );
 
-        mainLayout.addView(makeText(
-                "اكتب بياناتك للدخول إلى الامتحان",
-                18,
-                Color.WHITE
-        ));
+        EditText name = input("اكتب اسم الطالب");
 
-        EditText studentName = makeInput("اكتب اسم الطالب");
+        EditText code = input("اكتب كود الامتحان");
+        code.setInputType(InputType.TYPE_CLASS_TEXT);
 
-        EditText examCode = makeInput("اكتب كود الامتحان");
-        examCode.setInputType(InputType.TYPE_CLASS_TEXT);
+        content.addView(name);
+        content.addView(code);
 
-        mainLayout.addView(studentName);
-        mainLayout.addView(examCode);
+        TextView login = button("دخول الطالب");
 
-        TextView loginButton = makeButton("دخول الطالب");
+        login.setOnClickListener(v -> {
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+            String studentName =
+                    name.getText().toString().trim();
 
-                String name = studentName.getText().toString().trim();
-                String code = examCode.getText().toString().trim();
+            String examCode =
+                    code.getText().toString().trim();
 
-                if (name.isEmpty()) {
-                    studentName.setError("من فضلك اكتب اسم الطالب");
-                    return;
-                }
-
-                if (code.isEmpty()) {
-                    examCode.setError("من فضلك اكتب كود الامتحان");
-                    return;
-                }
-
-                showMessageScreen("تم إدخال بيانات الطالب بنجاح");
+            if (studentName.isEmpty()) {
+                name.setError("اكتب اسم الطالب");
+                name.requestFocus();
+                return;
             }
+
+            if (examCode.isEmpty()) {
+                code.setError("اكتب كود الامتحان");
+                code.requestFocus();
+                return;
+            }
+
+            showStudentHome(studentName, examCode);
         });
 
-        mainLayout.addView(loginButton);
+        content.addView(login);
 
-        TextView backButton = makeButton("رجوع");
+        TextView back = button("رجوع");
 
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoleScreen();
-            }
-        });
+        back.setOnClickListener(v -> showRoles());
 
-        mainLayout.addView(backButton);
-        mainLayout.addView(makeText("✦  ❖  ✦", 22, gold));
-
-        setContentView(mainLayout);
+        content.addView(back);
     }
 
-    private void showMessageScreen(String title) {
-        prepareLayout();
+    private void showStudentHome(
+            String studentName,
+            String examCode) {
 
-        mainLayout.addView(makeText("✦  ❖  ✦", 25, gold));
-        mainLayout.addView(makeText(title, 27, gold));
+        createScreen();
 
-        mainLayout.addView(makeText(
-                "هذه الشاشة سيتم تجهيزها في الخطوة القادمة",
-                18,
-                Color.WHITE
-        ));
+        addHeader(
+                "أهلًا بك يا " + studentName,
+                "تم تسجيل بيانات الدخول"
+        );
 
-        TextView backButton = makeButton("رجوع");
+        content.addView(
+                text("كود الامتحان: " + examCode, 17, LIGHT)
+        );
 
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoleScreen();
+        content.addView(
+                text("امتحاناتي", 25, GOLD)
+        );
+
+        TextView exams = button("الامتحانات");
+
+        exams.setOnClickListener(v ->
+                Toast.makeText(
+                        this,
+                        "سيتم تجهيز الامتحانات في المرحلة القادمة",
+                        Toast.LENGTH_SHORT
+                ).show()
+        );
+
+        content.addView(exams);
+
+        TextView myExams = button("امتحاناتي السابقة");
+
+        myExams.setOnClickListener(v ->
+                Toast.makeText(
+                        this,
+                        "سيتم تجهيز سجل الامتحانات لاحقًا",
+                        Toast.LENGTH_SHORT
+                ).show()
+        );
+
+        content.addView(myExams);
+
+        TextView back = button("تسجيل خروج");
+
+        back.setOnClickListener(v -> showRoles());
+
+        content.addView(back);
+    }
+
+    private void showTeacherLogin() {
+        createScreen();
+
+        addHeader(
+                "دخول المدرس",
+                "الدخول مخصص للمدرسين المصرح لهم"
+        );
+
+        EditText teacherName =
+                input("اكتب اسم المدرس");
+
+        EditText teacherCode =
+                input("اكتب كود المدرس");
+
+        teacherCode.setInputType(
+                InputType.TYPE_CLASS_NUMBER |
+                InputType.TYPE_NUMBER_VARIATION_PASSWORD
+        );
+
+        content.addView(teacherName);
+        content.addView(teacherCode);
+
+        TextView login = button("دخول المدرس");
+
+        login.setOnClickListener(v -> {
+
+            String name =
+                    teacherName.getText().toString().trim();
+
+            String code =
+                    teacherCode.getText().toString().trim();
+
+            if (name.isEmpty()) {
+                teacherName.setError("اكتب اسم المدرس");
+                teacherName.requestFocus();
+                return;
             }
+
+            if (code.isEmpty()) {
+                teacherCode.setError("اكتب كود المدرس");
+                teacherCode.requestFocus();
+                return;
+            }
+
+            if (!code.equals("1234")) {
+                teacherCode.setError("كود المدرس غير صحيح");
+                teacherCode.requestFocus();
+                return;
+            }
+
+            showTeacherHome(name);
         });
 
-        mainLayout.addView(backButton);
+        content.addView(login);
 
-        setContentView(mainLayout);
+        TextView back = button("رجوع");
+
+        back.setOnClickListener(v -> showRoles());
+
+        content.addView(back);
     }
-                           }
+
+    private void showTeacherHome(String teacherName) {
+        createScreen();
+
+        addHeader(
+                "لوحة المدرس",
+                "أهلًا بك يا " + teacherName
+        );
+
+        content.addView(
+                text(
+                        "من هنا سيتم إدارة الامتحانات والطلاب والنتائج",
+                        18,
+                        WHITE
+                )
+        );
+
+        TextView exams = button("إدارة الامتحانات");
+
+        exams.setOnClickListener(v ->
+                Toast.makeText(
+                        this,
+                        "إدارة الامتحانات ستتم إضافتها في المرحلة القادمة",
+                        Toast.LENGTH_SHORT
+                ).show()
+        );
+
+        content.addView(exams);
+
+        TextView students = button("الطلاب والنتائج");
+
+        students.setOnClickListener(v ->
+                Toast.makeText(
+                        this,
+                        "الطلاب والنتائج ستتم إضافتها في المرحلة القادمة",
+                        Toast.LENGTH_SHORT
+                ).show()
+        );
+
+        content.addView(students);
+
+        TextView notes = button("مذكرات الشرح");
+
+        notes.setOnClickListener(v ->
+                Toast.makeText(
+                        this,
+                        "مذكرات الشرح ستتم إضافتها لاحقًا",
+                        Toast.LENGTH_SHORT
+                ).show()
+        );
+
+        content.addView(notes);
+
+        TextView settings = button("الإعدادات");
+
+        settings.setOnClickListener(v ->
+                Toast.makeText(
+                        this,
+                        "الإعدادات ستتم إضافتها لاحقًا",
+                        Toast.LENGTH_SHORT
+                ).show()
+        );
+
+        content.addView(settings);
+
+        TextView logout = button("تسجيل خروج");
+
+        logout.setOnClickListener(v -> showRoles());
+
+        content.addView(logout);
+    }
+    }
