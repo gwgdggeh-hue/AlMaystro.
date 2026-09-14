@@ -5,12 +5,13 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.ScrollView;
 
 public class MainActivity extends Activity {
 
@@ -63,17 +64,15 @@ public class MainActivity extends Activity {
         button.setTextColor(darkGreen);
         button.setGravity(Gravity.CENTER);
         button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        button.setIncludeFontPadding(true);
-        button.setSingleLine(false);
         button.setPadding(dp(8), dp(5), dp(8), dp(5));
+        button.setClickable(true);
+        button.setFocusable(true);
 
         GradientDrawable background = new GradientDrawable();
         background.setColor(gold);
         background.setCornerRadius(dp(40));
 
         button.setBackground(background);
-        button.setClickable(true);
-        button.setFocusable(true);
 
         LinearLayout.LayoutParams params =
                 new LinearLayout.LayoutParams(
@@ -81,10 +80,40 @@ public class MainActivity extends Activity {
                         dp(65)
                 );
 
-        params.setMargins(dp(30), dp(8), dp(30), dp(8));
+        params.setMargins(dp(25), dp(8), dp(25), dp(8));
         button.setLayoutParams(params);
 
         return button;
+    }
+
+    private EditText makeInput(String hint) {
+        EditText input = new EditText(this);
+
+        input.setHint(hint);
+        input.setTextSize(18);
+        input.setTextColor(Color.WHITE);
+        input.setHintTextColor(Color.LTGRAY);
+        input.setGravity(Gravity.CENTER);
+        input.setSingleLine(true);
+        input.setPadding(dp(15), 0, dp(15), 0);
+
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(Color.rgb(20, 85, 59));
+        background.setCornerRadius(dp(20));
+        background.setStroke(dp(1), gold);
+
+        input.setBackground(background);
+
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(60)
+                );
+
+        params.setMargins(dp(20), dp(8), dp(20), dp(8));
+        input.setLayoutParams(params);
+
+        return input;
     }
 
     private void prepareLayout() {
@@ -150,7 +179,7 @@ public class MainActivity extends Activity {
         studentButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showMessageScreen("دخول الطالب");
+                showStudentLogin();
             }
         });
 
@@ -182,11 +211,71 @@ public class MainActivity extends Activity {
         setContentView(mainLayout);
     }
 
+    private void showStudentLogin() {
+        prepareLayout();
+
+        mainLayout.addView(makeText("✦  ❖  ✦", 25, gold));
+        mainLayout.addView(makeText("دخول الطالب", 30, gold));
+
+        mainLayout.addView(makeText(
+                "اكتب بياناتك للدخول إلى الامتحان",
+                18,
+                Color.WHITE
+        ));
+
+        EditText studentName = makeInput("اكتب اسم الطالب");
+
+        EditText examCode = makeInput("اكتب كود الامتحان");
+        examCode.setInputType(InputType.TYPE_CLASS_TEXT);
+
+        mainLayout.addView(studentName);
+        mainLayout.addView(examCode);
+
+        TextView loginButton = makeButton("دخول الطالب");
+
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                String name = studentName.getText().toString().trim();
+                String code = examCode.getText().toString().trim();
+
+                if (name.isEmpty()) {
+                    studentName.setError("من فضلك اكتب اسم الطالب");
+                    return;
+                }
+
+                if (code.isEmpty()) {
+                    examCode.setError("من فضلك اكتب كود الامتحان");
+                    return;
+                }
+
+                showMessageScreen("تم إدخال بيانات الطالب بنجاح");
+            }
+        });
+
+        mainLayout.addView(loginButton);
+
+        TextView backButton = makeButton("رجوع");
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showRoleScreen();
+            }
+        });
+
+        mainLayout.addView(backButton);
+        mainLayout.addView(makeText("✦  ❖  ✦", 22, gold));
+
+        setContentView(mainLayout);
+    }
+
     private void showMessageScreen(String title) {
         prepareLayout();
 
         mainLayout.addView(makeText("✦  ❖  ✦", 25, gold));
-        mainLayout.addView(makeText(title, 30, gold));
+        mainLayout.addView(makeText(title, 27, gold));
 
         mainLayout.addView(makeText(
                 "هذه الشاشة سيتم تجهيزها في الخطوة القادمة",
@@ -207,4 +296,4 @@ public class MainActivity extends Activity {
 
         setContentView(mainLayout);
     }
-            }
+                           }
