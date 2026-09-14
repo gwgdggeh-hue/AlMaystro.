@@ -879,3 +879,5 @@ public class MainActivity extends Activity {
 
         bg.setColor(cardColor());
         bg.setCornerRadius(dp(22));
+}
+}
