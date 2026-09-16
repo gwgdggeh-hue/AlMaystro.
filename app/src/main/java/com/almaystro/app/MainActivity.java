@@ -19,15 +19,17 @@ public class MainActivity extends Activity {
 
     private LinearLayout content;
     private boolean darkMode = true;
+    private String currentStudentName = "الطالب";
 
     private final int GOLD = Color.rgb(224, 190, 70);
     private final int DARK_GREEN = Color.rgb(5, 38, 27);
     private final int GREEN = Color.rgb(14, 70, 48);
-    private final int LIGHT_GREEN = Color.rgb(25, 92, 65);
 
     private int dp(int value) {
-        return (int) (value * getResources()
-                .getDisplayMetrics().density + 0.5f);
+        return (int) (value *
+                getResources()
+                        .getDisplayMetrics()
+                        .density + 0.5f);
     }
 
     @Override
@@ -36,16 +38,8 @@ public class MainActivity extends Activity {
         showWelcome();
     }
 
-    private int bgColor() {
-        return darkMode
-                ? DARK_GREEN
-                : Color.rgb(245, 242, 232);
-    }
-
     private int cardColor() {
-        return darkMode
-                ? GREEN
-                : Color.WHITE;
+        return darkMode ? GREEN : Color.WHITE;
     }
 
     private int mainTextColor() {
@@ -61,19 +55,22 @@ public class MainActivity extends Activity {
     }
 
     private GradientDrawable background() {
+
         return new GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
+
                 darkMode
                         ? new int[]{
-                                DARK_GREEN,
-                                GREEN,
-                                DARK_GREEN
-                        }
+                        DARK_GREEN,
+                        GREEN,
+                        DARK_GREEN
+                }
+
                         : new int[]{
-                                Color.rgb(245, 242, 232),
-                                Color.WHITE,
-                                Color.rgb(235, 232, 220)
-                        }
+                        Color.rgb(245, 242, 232),
+                        Color.WHITE,
+                        Color.rgb(235, 232, 220)
+                }
         );
     }
 
@@ -88,11 +85,14 @@ public class MainActivity extends Activity {
         t.setTextSize(size);
         t.setTextColor(color);
         t.setGravity(Gravity.CENTER);
+
         t.setTypeface(
                 Typeface.DEFAULT,
                 Typeface.BOLD
         );
+
         t.setIncludeFontPadding(true);
+
         t.setPadding(
                 dp(8),
                 dp(6),
@@ -109,6 +109,7 @@ public class MainActivity extends Activity {
 
         b.setText(value);
         b.setTextSize(18);
+
         b.setTextColor(
                 darkMode
                         ? DARK_GREEN
@@ -116,6 +117,7 @@ public class MainActivity extends Activity {
         );
 
         b.setGravity(Gravity.CENTER);
+
         b.setTypeface(
                 Typeface.DEFAULT,
                 Typeface.BOLD
@@ -157,81 +159,49 @@ public class MainActivity extends Activity {
         return b;
     }
 
-    private TextView card(
-            String title,
-            String description) {
+    private EditText input(String hint) {
 
-        LinearLayout box =
-                new LinearLayout(this);
+        EditText e = new EditText(this);
 
-        box.setOrientation(
-                LinearLayout.VERTICAL
+        e.setHint(hint);
+        e.setTextSize(17);
+
+        e.setTextColor(
+                mainTextColor()
         );
 
-        box.setGravity(Gravity.CENTER);
-
-        box.setPadding(
-                dp(15),
-                dp(12),
-                dp(15),
-                dp(12)
+        e.setHintTextColor(
+                secondaryTextColor()
         );
+
+        e.setGravity(Gravity.CENTER);
+        e.setSingleLine(true);
 
         GradientDrawable bg =
                 new GradientDrawable();
 
         bg.setColor(cardColor());
-        bg.setCornerRadius(dp(20));
+        bg.setCornerRadius(dp(18));
         bg.setStroke(dp(1), GOLD);
 
-        box.setBackground(bg);
-
-        TextView titleView =
-                text(
-                        title,
-                        21,
-                        GOLD
-                );
-
-        TextView descView =
-                text(
-                        description,
-                        15,
-                        secondaryTextColor()
-                );
-
-        box.addView(titleView);
-        box.addView(descView);
+        e.setBackground(bg);
 
         LinearLayout.LayoutParams p =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
+                        dp(58)
                 );
 
         p.setMargins(
-                dp(10),
-                dp(7),
-                dp(10),
-                dp(7)
+                dp(18),
+                dp(6),
+                dp(18),
+                dp(6)
         );
 
-        box.setLayoutParams(p);
+        e.setLayoutParams(p);
 
-        return createClickableCard(box);
-    }
-
-    private TextView createClickableCard(
-            LinearLayout box) {
-
-        TextView result = new TextView(this);
-
-        result.setText("");
-        result.setVisibility(View.GONE);
-
-        box.setTag(result);
-
-        return result;
+        return e;
     }
 
     private void prepareScreen() {
@@ -262,6 +232,7 @@ public class MainActivity extends Activity {
                 new ScrollView(this);
 
         scroll.setFillViewport(true);
+
         scroll.setBackground(
                 background()
         );
@@ -293,7 +264,9 @@ public class MainActivity extends Activity {
                 )
         );
 
-        if (subtitle != null) {
+        if (subtitle != null &&
+                !subtitle.isEmpty()) {
+
             content.addView(
                     text(
                             subtitle,
@@ -422,52 +395,6 @@ public class MainActivity extends Activity {
         content.addView(back);
     }
 
-    private EditText input(
-            String hint) {
-
-        EditText e =
-                new EditText(this);
-
-        e.setHint(hint);
-        e.setTextSize(17);
-        e.setTextColor(
-                mainTextColor()
-        );
-
-        e.setHintTextColor(
-                secondaryTextColor()
-        );
-
-        e.setGravity(Gravity.CENTER);
-        e.setSingleLine(true);
-
-        GradientDrawable bg =
-                new GradientDrawable();
-
-        bg.setColor(cardColor());
-        bg.setCornerRadius(dp(18));
-        bg.setStroke(dp(1), GOLD);
-
-        e.setBackground(bg);
-
-        LinearLayout.LayoutParams p =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        dp(58)
-                );
-
-        p.setMargins(
-                dp(18),
-                dp(6),
-                dp(18),
-                dp(6)
-        );
-
-        e.setLayoutParams(p);
-
-        return e;
-    }
-
     private void showStudentLogin() {
 
         prepareScreen();
@@ -502,20 +429,26 @@ public class MainActivity extends Activity {
                             .trim();
 
             if (n.isEmpty()) {
+
                 name.setError(
                         "اكتب اسم الطالب"
                 );
+
                 return;
             }
 
             if (c.isEmpty()) {
+
                 code.setError(
                         "اكتب كود الامتحان"
                 );
+
                 return;
             }
 
-            showStudentHome(n);
+            currentStudentName = n;
+
+            showStudentHome();
         });
 
         content.addView(login);
@@ -530,13 +463,12 @@ public class MainActivity extends Activity {
         content.addView(back);
     }
 
-    private void showStudentHome(
-            String studentName) {
+    private void showStudentHome() {
 
         prepareScreen();
 
         addHeader(
-                "أهلًا يا " + studentName,
+                "أهلًا يا " + currentStudentName,
                 "نتمنى لك التوفيق والنجاح 🌟"
         );
 
@@ -550,7 +482,7 @@ public class MainActivity extends Activity {
 
         content.addView(
                 text(
-                        "تابع امتحاناتك ومذكراتك وأذكارك من مكان واحد",
+                        "كل أدواتك التعليمية في مكان واحد",
                         15,
                         secondaryTextColor()
                 )
@@ -602,7 +534,7 @@ public class MainActivity extends Activity {
 
         content.addView(
                 text(
-                        "المراجعة المستمرة أفضل طريق لتثبيت المعلومات.",
+                        "المراجعة المستمرة تساعد على تثبيت المعلومات.",
                         16,
                         mainTextColor()
                 )
@@ -640,25 +572,33 @@ public class MainActivity extends Activity {
 
         content.addView(
                 text(
-                        "لا توجد امتحانات مسجلة حاليًا",
-                        18,
-                        secondaryTextColor()
+                        "📊 سجل الامتحانات",
+                        23,
+                        GOLD
                 )
         );
 
         content.addView(
                 text(
-                        "بعد ربط Firebase ستظهر هنا الامتحانات والدرجات والتصحيح.",
+                        "لا توجد امتحانات مسجلة حاليًا.",
+                        18,
+                        mainTextColor()
+                )
+        );
+
+        content.addView(
+                text(
+                        "بعد ربط Firebase ستظهر هنا الامتحانات والدرجات والتصحيح والأخطاء مع شرحها.",
                         15,
                         secondaryTextColor()
                 )
         );
 
         TextView back =
-                button("رجوع");
+                button("رجوع للرئيسية");
 
         back.setOnClickListener(
-                v -> showStudentHome("الطالب")
+                v -> showStudentHome()
         );
 
         content.addView(back);
@@ -702,10 +642,10 @@ public class MainActivity extends Activity {
         );
 
         TextView back =
-                button("رجوع");
+                button("رجوع للرئيسية");
 
         back.setOnClickListener(
-                v -> showStudentHome("الطالب")
+                v -> showStudentHome()
         );
 
         content.addView(back);
@@ -757,10 +697,10 @@ public class MainActivity extends Activity {
         );
 
         TextView back =
-                button("رجوع");
+                button("رجوع للرئيسية");
 
         back.setOnClickListener(
-                v -> showStudentHome("الطالب")
+                v -> showStudentHome()
         );
 
         content.addView(back);
@@ -787,6 +727,7 @@ public class MainActivity extends Activity {
         mode.setOnClickListener(v -> {
 
             darkMode = !darkMode;
+
             showSettings();
         });
 
@@ -828,7 +769,7 @@ public class MainActivity extends Activity {
 
         content.addView(
                 text(
-                        "التطبيق سيستخدم Firebase لحفظ بيانات الامتحانات والنتائج بطريقة منظمة وآمنة.",
+                        "سيتم استخدام Firebase لاحقًا لحفظ بيانات الامتحانات والنتائج بطريقة منظمة.",
                         15,
                         secondaryTextColor()
                 )
@@ -845,9 +786,7 @@ public class MainActivity extends Activity {
         content.addView(
                 text(
                         "المايسترو\n"
-                                + "المايسترو شريف هيبه\n\n"
-                                + "مع المبرمج او المطور محمود كليب\n"
-                                + "للتواصل 01112244710",
+                                + "المايسترو شريف هيبه",
                         15,
                         mainTextColor()
                 )
@@ -872,12 +811,92 @@ public class MainActivity extends Activity {
                 LinearLayout.HORIZONTAL
         );
 
-        bar.setGravity(Gravity.CENTER);
+        bar.setGravity(
+                Gravity.CENTER
+        );
 
         GradientDrawable bg =
                 new GradientDrawable();
 
         bg.setColor(cardColor());
         bg.setCornerRadius(dp(22));
-}
-}
+        bg.setStroke(dp(1), GOLD);
+
+        bar.setBackground(bg);
+
+        TextView home =
+                navButton("الرئيسية");
+
+        home.setOnClickListener(
+                v -> showStudentHome()
+        );
+
+        TextView exams =
+                navButton("امتحاناتي");
+
+        exams.setOnClickListener(
+                v -> showMyExams()
+        );
+
+        TextView azkar =
+                navButton("الأذكار");
+
+        azkar.setOnClickListener(
+                v -> showAzkar()
+        );
+
+        TextView notes =
+                navButton("المذكرات");
+
+        notes.setOnClickListener(
+                v -> showNotes()
+        );
+
+        TextView settings =
+                navButton("الإعدادات");
+
+        settings.setOnClickListener(
+                v -> showSettings()
+        );
+
+        bar.addView(home);
+        bar.addView(exams);
+        bar.addView(azkar);
+        bar.addView(notes);
+        bar.addView(settings);
+
+        LinearLayout.LayoutParams p =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(72)
+                );
+
+        p.setMargins(
+                dp(4),
+                dp(20),
+                dp(4),
+                dp(8)
+        );
+
+        content.addView(bar, p);
+    }
+
+    private TextView navButton(String value) {
+
+        TextView t =
+                new TextView(this);
+
+       t.setText(value);
+        t.setTextSize(12);
+        t.setTextColor(GOLD);
+        t.setGravity(Gravity.CENTER);
+
+        t.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
+
+        LinearLayout.LayoutParams p =
+                new LinearLayout.LayoutParams(
+                        0,
+                        Line
