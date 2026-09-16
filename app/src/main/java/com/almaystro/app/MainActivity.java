@@ -897,6 +897,170 @@ public class MainActivity extends Activity {
         );
 
         LinearLayout.LayoutParams p =
-                new LinearLayout.LayoutParams(
-                        0,
-                        Line
+        new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1
+        );
+
+t.setLayoutParams(p);
+
+return t;
+}
+
+private void showTeacherLogin() {
+
+    prepareScreen();
+
+    addHeader(
+            "دخول المدرس",
+            "الدخول مخصص للمدرسين المصرح لهم"
+    );
+
+    EditText name =
+            input("اكتب اسم المدرس");
+
+    EditText code =
+            input("اكتب كود المدرس");
+
+    code.setInputType(
+            InputType.TYPE_CLASS_NUMBER |
+            InputType.TYPE_NUMBER_VARIATION_PASSWORD
+    );
+
+    content.addView(name);
+    content.addView(code);
+
+    TextView login =
+            button("دخول المدرس");
+
+    login.setOnClickListener(v -> {
+
+        String n =
+                name.getText()
+                        .toString()
+                        .trim();
+
+        String c =
+                code.getText()
+                        .toString()
+                        .trim();
+
+        if (n.isEmpty()) {
+            name.setError("اكتب اسم المدرس");
+            return;
+        }
+
+        if (!c.equals("1234")) {
+            code.setError("كود المدرس غير صحيح");
+            return;
+        }
+
+        showTeacherHome(n);
+    });
+
+    content.addView(login);
+
+    TextView back =
+            button("رجوع");
+
+    back.setOnClickListener(
+            v -> showRoles()
+    );
+
+    content.addView(back);
+}
+
+private void showTeacherHome(String teacherName) {
+
+    prepareScreen();
+
+    addHeader(
+            "لوحة المدرس",
+            "أهلًا بك يا " + teacherName
+    );
+
+    content.addView(
+            text(
+                    "إدارة المنصة التعليمية",
+                    23,
+                    GOLD
+            )
+    );
+
+    TextView exams =
+            button("📝  إدارة الامتحانات");
+
+    exams.setOnClickListener(
+            v -> Toast.makeText(
+                    this,
+                    "سيتم ربط إدارة الامتحانات بـ Firebase",
+                    Toast.LENGTH_SHORT
+            ).show()
+    );
+
+    content.addView(exams);
+
+    TextView questions =
+            button("❓  الأسئلة والأكواد");
+
+    questions.setOnClickListener(
+            v -> Toast.makeText(
+                    this,
+                    "سيتم تجهيز بنك الأسئلة والأكواد",
+                    Toast.LENGTH_SHORT
+            ).show()
+    );
+
+    content.addView(questions);
+
+    TextView results =
+            button("📊  الطلاب والنتائج");
+
+    results.setOnClickListener(
+            v -> Toast.makeText(
+                    this,
+                    "سيتم تجهيز النتائج والدرجات",
+                    Toast.LENGTH_SHORT
+            ).show()
+    );
+
+    content.addView(results);
+
+    TextView notes =
+            button("📚  إضافة مذكرات شرح");
+
+    notes.setOnClickListener(
+            v -> Toast.makeText(
+                    this,
+                    "سيتم تجهيز رفع المذكرات",
+                    Toast.LENGTH_SHORT
+            ).show()
+    );
+
+    content.addView(notes);
+
+    TextView groups =
+            button("👥  مجموعات الطلاب");
+
+    groups.setOnClickListener(
+            v -> Toast.makeText(
+                    this,
+                    "سيتم تجهيز مجموعات الطلاب",
+                    Toast.LENGTH_SHORT
+            ).show()
+    );
+
+    content.addView(groups);
+
+    TextView logout =
+            button("تسجيل خروج");
+
+    logout.setOnClickListener(
+            v -> showRoles()
+    );
+
+    content.addView(logout);
+}
+
+        }
