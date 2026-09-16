@@ -886,7 +886,7 @@ public class MainActivity extends Activity {
         TextView t =
                 new TextView(this);
 
-       t.setText(value);
+        t.setText(value);
         t.setTextSize(12);
         t.setTextColor(GOLD);
         t.setGravity(Gravity.CENTER);
