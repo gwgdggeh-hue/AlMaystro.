@@ -1254,9 +1254,36 @@ public class MainActivity extends Activity {
                 () -> teacherQuestions()
         );
 
-        addTeacherAction(
+                addTeacherAction(
                 "🔑 أكواد الامتحانات",
-                "إنشاء وم
+                "إنشاء ومتابعة أكواد الامتحانات",
+                () -> codes()
+        );
+
+        addTeacherAction(
+                "📊 النتائج والطلاب",
+                "عرض نتائج الطلاب والدرجات",
+                () -> teacherResults()
+        );
+
+        addTeacherAction(
+                "📚 المذكرات",
+                "إضافة وإدارة مذكرات الشرح",
+                () -> teacherNotes()
+        );
+
+        addTeacherAction(
+                "👥 الجروبات",
+                "إدارة مجموعات الطلاب",
+                () -> teacherGroups()
+        );
+
+        addTeacherAction(
+                "⚙️ إعدادات المدرس",
+                "إعدادات مساحة المدرس",
+                () -> teacherSettings()
+        );
+    }
             // =========================================================
     // TEACHER BOTTOM NAVIGATION
     // =========================================================
