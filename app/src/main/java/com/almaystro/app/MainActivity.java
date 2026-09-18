@@ -1,131 +1,273 @@
 package com.almaystro.app;
 
-import android.app.AlertDialog;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
-import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.Locale;
-import java.util.Random;
 
 public class MainActivity extends Activity {
 
     private LinearLayout content;
+    private LinearLayout bottomBar;
     private SharedPreferences prefs;
     private CountDownTimer examTimer;
 
-    private boolean darkMode = true;
+    private boolean darkMode;
     private boolean examRunning = false;
 
     private String studentName = "";
     private String teacherName = "";
-    private String activeExamId = "";
-    private String activeCode = "";
+    private String activeExam = "";
 
-    private JSONArray activeQuestions = new JSONArray();
     private int currentQuestion = 0;
     private int remainingSeconds = 0;
 
-    private final int GOLD = Color.rgb(224, 190, 70);
-    private final int GREEN = Color.rgb(14, 70, 48);
-    private final int DARK = Color.rgb(5, 38, 27);
-    private final int WHITE = Color.WHITE;
-    private final int BLACK = Color.rgb(30, 30, 30);
-    private final int GRAY = Color.rgb(150, 150, 150);
+    private final ArrayList<JSONObject> questions = new ArrayList<>();
+    private final ArrayList<Integer> answers = new ArrayList<>();
 
-    private static final String PREFS = "almaystro_data";
+    private final int GREEN = Color.rgb(8, 67, 46);
+    private final int GOLD = Color.rgb(220, 184, 70);
+    private final int DARK = Color.rgb(25, 29, 27);
+    private final int LIGHT = Color.rgb(247, 247, 244);
+    private final int WHITE = Color.WHITE;
+    private final int BLACK = Color.BLACK;
+    private final int GRAY = Color.rgb(110, 110, 110);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        darkMode = prefs.getBoolean("dark_mode", true);
+        getWindow().setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE
+        );
 
-        seedData();
-        applyBrightness();
-        showWelcome();
+        prefs = getSharedPreferences("almaystro_data", MODE_PRIVATE);
+
+        darkMode = prefs.getBoolean("dark_mode", false);
+        studentName = prefs.getString("student_name", "");
+        teacherName = prefs.getString("teacher_name", "");
+
+        createDefaultData();
+        welcome();
     }
 
-    // =========================================================
-    // BASIC HELPERS
-    // =========================================================
+    private void createDefaultData() {
+        if (!prefs.contains("exams")) {
+            try {
+                JSONArray exams = new JSONArray();
 
-    private int dp(int value) {
-        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+                JSONObject exam = new JSONObject();
+                exam.put("name", "امتحان التاريخ التجريبي");
+                exam.put("duration", 10);
+                exam.put("code", "123456");
+
+                JSONArray qs = new JSONArray();
+
+                qs.put(makeQuestion(
+                        "من هو مؤسس الدولة الأيوبية؟",
+                        new String[]{
+                                "صلاح الدين الأيوبي",
+                                "عمرو بن العاص",
+                                "محمد علي",
+                                "أحمد عرابي"
+                        },
+                        0,
+                        "صلاح الدين الأيوبي هو مؤسس الدولة الأيوبية."
+                ));
+
+                qs.put(makeQuestion(
+                        "ما عاصمة مصر؟",
+                        new String[]{
+                                "الإسكندرية",
+                                "القاهرة",
+                                "الجيزة",
+                                "أسوان"
+                        },
+                        1,
+                        "القاهرة هي عاصمة جمهورية مصر العربية."
+                ));
+
+                qs.put(makeQuestion(
+                        "من أسس مدينة القاهرة؟",
+                        new String[]{
+                                "الفاطميون",
+                                "المماليك",
+                                "الرومان",
+                                "العثمانيون"
+                        },
+                        0,
+                        "أسس الفاطميون مدينة القاهرة."
+                ));
+
+                exam.put("questions", qs);
+                exams.put(exam);
+
+                prefs.edit()
+                        .putString("exams", exams.toString())
+                        .apply();
+
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (!prefs.contains("notes")) {
+            try {
+                JSONArray notes = new JSONArray();
+
+                notes.put(makeNote(
+                        "مراجعة التاريخ",
+                        "راجع أهم الأحداث والشخصيات والتواريخ قبل دخول الامتحان."
+                ));
+
+                notes.put(makeNote(
+                        "نصيحة المايسترو",
+                        "اقرأ السؤال بهدوء وحدد المطلوب قبل اختيار الإجابة."
+                ));
+
+                prefs.edit()
+                        .putString("notes", notes.toString())
+                        .apply();
+
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (!prefs.contains("groups")) {
+            JSONArray groups = new JSONArray();
+
+            groups.put("جروب أولى بكالوريا بنات");
+            groups.put("جروب أولى بكالوريا ولاد");
+            groups.put("جروب تانية بكالوريا بنات");
+            groups.put("جروب تانية بكالوريا ولاد");
+            groups.put("طلاب المايسترو تالتة إعدادي");
+            groups.put("جروب ذكرى ومنفعة");
+
+            prefs.edit()
+                    .putString("groups", groups.toString())
+                    .apply();
+        }
     }
 
-    private int foreground() {
-        return darkMode ? WHITE : BLACK;
+    private JSONObject makeQuestion(
+            String title,
+            String[] options,
+            int correct,
+            String explanation
+    ) {
+        JSONObject q = new JSONObject();
+
+        try {
+            q.put("text", title);
+            q.put("correct", correct);
+            q.put("explanation", explanation);
+
+            JSONArray a = new JSONArray();
+
+            for (String option : options) {
+                a.put(option);
+            }
+
+            q.put("options", a);
+
+        } catch (Exception ignored) {
+        }
+
+        return q;
     }
 
-    private int secondary() {
-        return darkMode ? Color.rgb(210, 210, 210) : Color.rgb(90, 90, 90);
+    private JSONObject makeNote(String title, String body) {
+        JSONObject n = new JSONObject();
+
+        try {
+            n.put("title", title);
+            n.put("body", body);
+        } catch (Exception ignored) {
+        }
+
+        return n;
     }
 
-    private int surface() {
-        return darkMode ? Color.rgb(18, 55, 42) : Color.WHITE;
+    private void setup(String title) {
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(darkMode ? DARK : LIGHT);
+
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.VERTICAL);
+        header.setGravity(Gravity.CENTER);
+        header.setPadding(15, 25, 15, 25);
+        header.setBackgroundColor(GREEN);
+
+        TextView titleText = text(title, 23, GOLD);
+        titleText.setGravity(Gravity.CENTER);
+        titleText.setTypeface(Typeface.DEFAULT_BOLD);
+
+        header.addView(titleText);
+
+        root.addView(
+                header,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        -2
+                )
+        );
+
+        ScrollView scroll = new ScrollView(this);
+
+        content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(18, 18, 18, 18);
+
+        scroll.addView(content);
+
+        root.addView(
+                scroll,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        0,
+                        1
+                )
+        );
+
+        bottomBar = new LinearLayout(this);
+        bottomBar.setOrientation(LinearLayout.HORIZONTAL);
+        bottomBar.setGravity(Gravity.CENTER);
+        bottomBar.setBackgroundColor(GREEN);
+
+        root.addView(
+                bottomBar,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        60
+                )
+        );
+
+        setContentView(root);
     }
 
-    private GradientDrawable background() {
-        GradientDrawable g = new GradientDrawable();
-        g.setColor(darkMode ? DARK : Color.rgb(245, 242, 234));
-        return g;
-    }
-
-    private GradientDrawable cardBackground() {
-        GradientDrawable g = new GradientDrawable();
-        g.setColor(surface());
-        g.setCornerRadius(dp(18));
-        g.setStroke(dp(1), GOLD);
-        return g;
-    }
-
-    private TextView text(String value, float size, int color, boolean bold) {
+    private TextView text(String value, float size, int color) {
         TextView t = new TextView(this);
+
         t.setText(value);
         t.setTextSize(size);
         t.setTextColor(color);
-        t.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        t.setTypeface(Typeface.DEFAULT, bold ? Typeface.BOLD : Typeface.NORMAL);
-        t.setPadding(dp(8), dp(8), dp(8), dp(8));
+        t.setPadding(5, 10, 5, 10);
+
         return t;
-    }
-
-    private TextView button(String value) {
-        TextView b = text(value, 16, WHITE, true);
-        b.setGravity(Gravity.CENTER);
-
-        GradientDrawable g = new GradientDrawable();
-        g.setColor(GREEN);
-        g.setCornerRadius(dp(18));
-        g.setStroke(dp(1), GOLD);
-
-        b.setBackground(g);
-
-        LinearLayout.LayoutParams p =
-                new LinearLayout.LayoutParams(-1, dp(55));
-
-        p.setMargins(dp(8), dp(5), dp(8), dp(5));
-        b.setLayoutParams(p);
-
-        return b;
     }
 
     private EditText input(String hint) {
@@ -133,141 +275,111 @@ public class MainActivity extends Activity {
 
         e.setHint(hint);
         e.setTextSize(16);
-        e.setTextColor(foreground());
-        e.setHintTextColor(secondary());
-        e.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         e.setSingleLine(true);
-        e.setPadding(dp(15), dp(5), dp(15), dp(5));
+        e.setPadding(15, 10, 15, 10);
 
-        GradientDrawable g = new GradientDrawable();
-        g.setColor(surface());
-        g.setCornerRadius(dp(15));
-        g.setStroke(dp(1), GOLD);
-
-        e.setBackground(g);
-
-        LinearLayout.LayoutParams p =
-                new LinearLayout.LayoutParams(-1, dp(54));
-
-        p.setMargins(dp(8), dp(5), dp(8), dp(5));
-        e.setLayoutParams(p);
+        e.setTextColor(darkMode ? WHITE : BLACK);
+        e.setHintTextColor(
+                darkMode ? Color.LTGRAY : GRAY
+        );
 
         return e;
     }
 
-    private void base() {
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(10), dp(10), dp(10), dp(10));
-        root.setBackground(background());
-        root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+    private Button button(
+            String title,
+            View.OnClickListener listener
+    ) {
+        Button b = new Button(this);
 
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.addView(root);
-
-        content = root;
-        setContentView(scroll);
-    }
-
-    private void header(String title, String subtitle) {
-        content.addView(text("✦ ❖ ✦", 20, GOLD, true));
-        content.addView(text(title, 27, GOLD, true));
-
-        if (subtitle != null && !subtitle.isEmpty()) {
-            content.addView(text(subtitle, 15, secondary(), false));
-        }
-
-        content.addView(text("❖", 18, GOLD, true));
-    }
-
-    private void addButton(String value, View.OnClickListener listener) {
-        TextView b = button(value);
+        b.setText(title);
+        b.setTextSize(16);
+        b.setTextColor(WHITE);
+        b.setBackgroundColor(GREEN);
         b.setOnClickListener(listener);
-        content.addView(b);
-    }
-
-    private void addCard(String value) {
-        TextView t = text(value, 16, foreground(), false);
-        t.setBackground(cardBackground());
 
         LinearLayout.LayoutParams p =
-                new LinearLayout.LayoutParams(-1, -2);
+                new LinearLayout.LayoutParams(
+                        -1,
+                        -2
+                );
 
-        p.setMargins(dp(5), dp(6), dp(5), dp(6));
-        content.addView(t, p);
+        p.setMargins(0, 7, 0, 7);
+        b.setLayoutParams(p);
+
+        return b;
     }
 
-    private void back(View.OnClickListener listener) {
-        addButton("↩ رجوع", listener);
-    }
+    private void bottomButton(
+            String title,
+            View.OnClickListener listener
+    ) {
+        Button b = new Button(this);
 
-    private void toast(String value) {
-        Toast.makeText(this, value, Toast.LENGTH_SHORT).show();
-    }
+        b.setText(title);
+        b.setTextSize(11);
+        b.setTextColor(WHITE);
+        b.setBackgroundColor(Color.TRANSPARENT);
+        b.setOnClickListener(listener);
 
-    private int number(String value, int fallback) {
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (Exception e) {
-            return fallback;
-        }
-    }
-
-    // =========================================================
-    // WELCOME
-    // =========================================================
-
-    private void showWelcome() {
-        base();
-
-        ImageView image = new ImageView(this);
-
-        try {
-            image.setImageResource(R.drawable.maestro);
-        } catch (Exception ignored) {
-        }
-
-        image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-
-        content.addView(
-                image,
-                new LinearLayout.LayoutParams(-1, dp(190))
-        );
-
-        content.addView(text("المايسترو", 38, GOLD, true));
-        content.addView(text("المايسترو شريف هيبه", 21, foreground(), true));
-        content.addView(text("هتتعلم التاريخ ببساطة", 18, secondary(), false));
-        content.addView(text("✦ منصة الامتحانات والمراجعة ✦", 15, GOLD, true));
-
-        addButton("🚀 ابدأ الآن", v -> roles());
-
-        content.addView(
-                text(
-                        "طالب • مدرس • امتحانات • نتائج • مذكرات • أذكار",
-                        14,
-                        secondary(),
-                        false
+        bottomBar.addView(
+                b,
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
                 )
         );
     }
 
-    private void roles() {
-        base();
-        header("مرحبًا بك في المايسترو", "اختر نوع الدخول");
+    private void welcome() {
+        setup("المايسترو");
 
-        addButton("👨‍🎓 أنا طالب", v -> studentLogin());
-        addButton("👨‍🏫 أنا مدرس", v -> teacherLogin());
-        addButton("ℹ️ عن التطبيق", v -> about());
+        TextView welcomeText = text(
+                "🎓\n\n" +
+                "المايسترو شريف هيبه\n\n" +
+                "هتتعلم التاريخ ببساطة",
+                24,
+                darkMode ? WHITE : GREEN
+        );
+
+        welcomeText.setGravity(Gravity.CENTER);
+        welcomeText.setTypeface(Typeface.DEFAULT_BOLD);
+
+        content.addView(welcomeText);
+
+        content.addView(
+                button(
+                        "👨‍🎓 أنا طالب",
+                        v -> studentLogin()
+                )
+        );
+
+        content.addView(
+                button(
+                        "👨‍🏫 أنا مدرس",
+                        v -> teacherLogin()
+                )
+        );
+
+        content.addView(
+                button(
+                        "⚙ الإعدادات",
+                        v -> settings()
+                )
+        );
     }
 
-    // =========================================================
-    // STUDENT LOGIN
-    // =========================================================
-
     private void studentLogin() {
-        base();
-        header("دخول الطالب", "اكتب الاسم وكود الامتحان");
+        setup("دخول الطالب");
+
+        content.addView(
+                text(
+                        "اكتب اسم الطالب وكود الامتحان",
+                        18,
+                        darkMode ? WHITE : BLACK
+                )
+        );
 
         EditText name = input("اسم الطالب");
         EditText code = input("كود الامتحان");
@@ -276,404 +388,360 @@ public class MainActivity extends Activity {
         content.addView(code);
 
         content.addView(
-                text(
-                        "للتجربة: DEMO123",
-                        14,
-                        GOLD,
-                        true
+                button(
+                        "دخول",
+                        v -> {
+
+                            String n =
+                                    name.getText()
+                                            .toString()
+                                            .trim();
+
+                            String c =
+                                    code.getText()
+                                            .toString()
+                                            .trim();
+
+                            if (n.isEmpty() || c.isEmpty()) {
+                                toast("اكتب الاسم والكود");
+                                return;
+                            }
+
+                            JSONArray exams = getExams();
+
+                            for (int i = 0;
+                                 i < exams.length();
+                                 i++) {
+
+                                try {
+                                    JSONObject exam =
+                                            exams.getJSONObject(i);
+
+                                    if (c.equals(
+                                            exam.optString("code")
+                                    )) {
+
+                                        studentName = n;
+
+                                        prefs.edit()
+                                                .putString(
+                                                        "student_name",
+                                                        n
+                                                )
+                                                .apply();
+
+                                        startExam(exam);
+                                        return;
+                                    }
+
+                                } catch (Exception ignored) {
+                                }
+                            }
+
+                            toast("كود الامتحان غير صحيح");
+                        }
                 )
         );
 
-        addButton("📝 دخول الامتحان", v -> {
-
-            String n = name.getText().toString().trim();
-            String c = code.getText().toString().trim().toUpperCase(Locale.ROOT);
-
-            if (n.isEmpty()) {
-                name.setError("اكتب اسم الطالب");
-                return;
-            }
-
-            if (c.isEmpty()) {
-                code.setError("اكتب كود الامتحان");
-                return;
-            }
-
-            JSONObject exam = findExamByCode(c);
-
-            if (exam == null) {
-                code.setError("الكود غير موجود");
-                return;
-            }
-
-            String usedKey = n.toLowerCase(Locale.ROOT) + "|" + c;
-
-            if (isCodeUsed(usedKey)) {
-                code.setError("هذا الكود استُخدم بالفعل لهذا الطالب");
-                return;
-            }
-
-            studentName = n;
-            activeCode = c;
-            activeExamId = exam.optString("id");
-
-            startExam(exam);
-        });
-
-        back(v -> roles());
+        content.addView(
+                button(
+                        "رجوع",
+                        v -> welcome()
+                )
+        );
     }
-
-    // =========================================================
-    // STUDENT HOME
-    // =========================================================
 
     private void studentHome() {
-        base();
-        header(
-                "أهلًا يا " +
-                        (studentName.isEmpty() ? "طالب" : studentName),
-                "لوحة الطالب"
+        setup("المايسترو - الطالب");
+
+        content.addView(
+                text(
+                        "أهلًا يا " + studentName + " 👋",
+                        22,
+                        GOLD
+                )
         );
 
-        addCard(
-                "🎓 مرحبًا بك في المايسترو\n" +
-                        "منصة الامتحانات والمراجعة التعليمية"
+        content.addView(
+                button(
+                        "📝 الامتحانات",
+                        v -> studentExams()
+                )
         );
 
-        addButton("📝 دخول امتحان", v -> studentLogin());
-        addButton("📊 امتحاناتي ونتائجي", v -> studentResults());
-        addButton("📚 مذكرات الشرح", v -> studentNotes());
-        addButton("🤲 الأذكار", v -> azkar());
-        addButton("🏆 تقدمي وإنجازاتي", v -> progress());
-        addButton("🔔 التحديثات", v -> updates());
-        addButton("⚙️ الإعدادات", v -> studentSettings());
-        addButton("ℹ️ عن التطبيق", v -> about());
+        content.addView(
+                button(
+                        "📊 امتحاناتي ونتائجي",
+                        v -> studentResults()
+                )
+        );
 
-        studentNavigation();
+        content.addView(
+                button(
+                        "📚 المذكرات",
+                        v -> notes()
+                )
+        );
+
+        content.addView(
+                button(
+                        "📿 الأذكار",
+                        v -> azkar()
+                )
+        );
+
+        content.addView(
+                button(
+                        "⚙ الإعدادات",
+                        v -> settings()
+                )
+        );
+
+        bottomButton(
+                "الرئيسية",
+                v -> studentHome()
+        );
+
+        bottomButton(
+                "امتحاناتي",
+                v -> studentResults()
+        );
+
+        bottomButton(
+                "أذكار",
+                v -> azkar()
+        );
+
+        bottomButton(
+                "مذكرات",
+                v -> notes()
+        );
+
+        bottomButton(
+                "إعدادات",
+                v -> settings()
+        );
     }
 
-    // =========================================================
-    // STUDENT RESULTS
-    // =========================================================
+    private void studentExams() {
+        setup("الامتحانات");
 
-    private void studentResults() {
-        base();
-        header("امتحاناتي", studentName);
+        JSONArray exams = getExams();
 
-        JSONArray results = array("results");
-        boolean found = false;
+        if (exams.length() == 0) {
+            content.addView(
+                    text(
+                            "لا توجد امتحانات.",
+                            18,
+                            GRAY
+                    )
+            );
+        }
 
-        for (int i = 0; i < results.length(); i++) {
+        for (int i = 0;
+             i < exams.length();
+             i++) {
+
             try {
-                JSONObject r = results.getJSONObject(i);
+                JSONObject exam =
+                        exams.getJSONObject(i);
 
-                if (!studentName.equals(r.optString("student"))) {
-                    continue;
-                }
+                final JSONObject selectedExam = exam;
 
-                found = true;
+                int count =
+                        exam.optJSONArray(
+                                "questions"
+                        ).length();
 
-                int total = r.optInt("total");
-                int correct = r.optInt("correct");
-                int answered = r.optInt("answered");
+                content.addView(
+                        text(
+                                exam.optString("name") +
+                                "\nالمدة: " +
+                                exam.optInt("duration") +
+                                " دقيقة" +
+                                "\nعدد الأسئلة: " +
+                                count,
+                                17,
+                                darkMode ? WHITE : BLACK
+                        )
+                );
 
-                String mistakes = r.optString("mistakes", "");
-
-                StringBuilder s = new StringBuilder();
-
-                s.append("📝 ")
-                        .append(r.optString("exam"))
-                        .append("\n");
-
-                s.append("✅ الصحيح: ")
-                        .append(correct)
-                        .append("/")
-                        .append(total)
-                        .append("\n");
-
-                s.append("✍️ تمت الإجابة: ")
-                        .append(answered)
-                        .append("\n");
-
-                s.append("⬜ بدون إجابة: ")
-                        .append(total - answered)
-                        .append("\n");
-
-                if (!mistakes.isEmpty()) {
-                    s.append("\n❌ أخطاء للمراجعة:\n")
-                            .append(mistakes);
-                } else {
-                    s.append("\n🌟 لا توجد أخطاء.");
-                }
-
-                addCard(s.toString());
-
-            } catch (Exception ignored) {
-            }
-        }
-
-        if (!found) {
-            addCard("لا توجد نتائج لهذا الطالب حتى الآن.");
-        }
-
-        back(v -> studentHome());
-        studentNavigation();
-    }
-
-    // =========================================================
-    // NOTES
-    // =========================================================
-
-    private void studentNotes() {
-        base();
-        header("مذكرات الشرح", "المذكرات المتاحة");
-
-        JSONArray notes = array("notes");
-
-        if (notes.length() == 0) {
-            addCard("لا توجد مذكرات حاليًا.");
-        }
-
-        for (int i = 0; i < notes.length(); i++) {
-            try {
-                JSONObject n = notes.getJSONObject(i);
-
-                addCard(
-                        "📖 " +
-                                n.optString("title") +
-                                "\n\n" +
-                                n.optString("body")
+                content.addView(
+                        button(
+                                "دخول الامتحان",
+                                v -> startExam(selectedExam)
+                        )
                 );
 
             } catch (Exception ignored) {
             }
         }
 
-        back(v -> studentHome());
-        studentNavigation();
-    }
-
-    // =========================================================
-    // AZKAR
-    // =========================================================
-
-    private void azkar() {
-        base();
-        header("الأذكار", "ذكر الله وطمأنينة القلب");
-
-        addCard(
-                "☀️ أذكار الصباح\n\n" +
-                        "آية الكرسي\n" +
-                        "الإخلاص والفلق والناس\n" +
-                        "أصبحنا وأصبح الملك لله\n" +
-                        "سبحان الله وبحمده\n" +
-                        "أستغفر الله وأتوب إليه"
-        );
-
-        addCard(
-                "🌙 أذكار المساء\n\n" +
-                        "آية الكرسي\n" +
-                        "الإخلاص والفلق والناس\n" +
-                        "أمسينا وأمسى الملك لله\n" +
-                        "سبحان الله وبحمده\n" +
-                        "أستغفر الله وأتوب إليه"
-        );
-
-        addCard(
-                "📿 ورد الذكر\n\n" +
-                        "سبحان الله\n" +
-                        "الحمد لله\n" +
-                        "الله أكبر\n" +
-                        "لا إله إلا الله\n" +
-                        "أستغفر الله"
-        );
-
-        addButton("📿 عداد الذكر", v -> dhikrCounter());
-
-        back(v -> studentHome());
-        studentNavigation();
-    }
-
-    private void dhikrCounter() {
-        final int[] count = {0};
-
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(20), dp(20), dp(20), dp(20));
-
-        TextView number = text("0", 42, GOLD, true);
-        number.setGravity(Gravity.CENTER);
-
-        TextView plus = button("📿 اضغط للذكر");
-
-        plus.setOnClickListener(v -> {
-            count[0]++;
-            number.setText(String.valueOf(count[0]));
-        });
-
-        box.addView(number);
-        box.addView(plus);
-
-        new AlertDialog.Builder(this)
-                .setTitle("عداد الذكر")
-                .setView(box)
-                .setPositiveButton("إغلاق", null)
-                .show();
-    }
-
-    // =========================================================
-    // PROGRESS
-    // =========================================================
-
-    private void progress() {
-        base();
-        header("تقدمي وإنجازاتي", studentName);
-
-        JSONArray results = array("results");
-
-        int exams = 0;
-        int correct = 0;
-        int total = 0;
-
-        for (int i = 0; i < results.length(); i++) {
-            try {
-                JSONObject r = results.getJSONObject(i);
-
-                if (studentName.equals(r.optString("student"))) {
-                    exams++;
-                    correct += r.optInt("correct");
-                    total += r.optInt("total");
-                }
-
-            } catch (Exception ignored) {
-            }
-        }
-
-        addCard(
-                "🏆 الامتحانات المنجزة: " + exams +
-                        "\n\n✅ الإجابات الصحيحة: " + correct +
-                        "\n\n📚 إجمالي الأسئلة: " + total
-        );
-
-        addCard(
-                exams == 0
-                        ? "ابدأ أول امتحان لتسجيل أول إنجاز لك."
-                        : "🌟 استمر في المراجعة والتدريب."
-        );
-
-        back(v -> studentHome());
-        studentNavigation();
-    }
-
-    // =========================================================
-    // UPDATES
-    // =========================================================
-
-    private void updates() {
-        base();
-        header("التحديثات", "آخر أخبار المايسترو");
-
-        addCard(
-                prefs.getString(
-                        "update",
-                        "🔔 لا توجد تحديثات جديدة حاليًا."
+        content.addView(
+                button(
+                        "رجوع",
+                        v -> studentHome()
                 )
         );
-
-        back(v -> studentHome());
-        studentNavigation();
     }
 
-    // =========================================================
-    // STUDENT SETTINGS
-    // =========================================================
+    private void startExam(JSONObject exam) {
+        if (examRunning) {
+            toast("يوجد امتحان مفتوح بالفعل");
+            return;
+        }
 
-    private void studentSettings() {
-        base();
-        header("الإعدادات", "تخصيص التطبيق");
+        try {
+            JSONArray arr =
+                    exam.optJSONArray("questions");
 
-        addCard(
-                "👤 الطالب\n" +
-                        (studentName.isEmpty()
-                                ? "غير مسجل"
-                                : studentName)
-        );
+            if (arr == null || arr.length() == 0) {
+                toast("الامتحان لا يحتوي على أسئلة");
+                return;
+            }
 
-        addButton(
-                darkMode
-                        ? "☀️ تفعيل الوضع النهاري"
-                        : "🌙 تفعيل الوضع الليلي",
-                v -> {
-                    darkMode = !darkMode;
+            questions.clear();
+            answers.clear();
 
-                    prefs.edit()
-                            .putBoolean("dark_mode", darkMode)
-                            .apply();
+            for (int i = 0;
+                 i < arr.length();
+                 i++) {
 
-                    studentSettings();
-                }
-        );
+                questions.add(
+                        arr.getJSONObject(i)
+                );
 
-        addButton("🔆 التحكم في السطوع", v -> brightnessDialog());
+                answers.add(-1);
+            }
 
-        addButton("🔐 الخصوصية والأمان", v -> privacy());
+            activeExam =
+                    exam.optString("name");
 
-        addButton("ℹ️ عن التطبيق", v -> about());
+            remainingSeconds =
+                    exam.optInt("duration", 10) * 60;
 
-        addButton("🚪 تسجيل الخروج", v -> {
-            studentName = "";
-            activeCode = "";
-            activeExamId = "";
-            roles();
-        });
+            currentQuestion = 0;
+            examRunning = true;
 
-        back(v -> studentHome());
+            showExamQuestion();
+            startExamTimer();
+
+        } catch (Exception e) {
+            toast("حدث خطأ في فتح الامتحان");
+            examRunning = false;
+        }
     }
 
-    private void brightnessDialog() {
-        SeekBar seek = new SeekBar(this);
-        seek.setMax(100);
+    private void startExamTimer() {
+        if (examTimer != null) {
+            examTimer.cancel();
+        }
 
-        int saved = prefs.getInt("brightness", 100);
-        seek.setProgress(saved);
-
-        seek.setOnSeekBarChangeListener(
-                new SeekBar.OnSeekBarChangeListener() {
+        examTimer =
+                new CountDownTimer(
+                        remainingSeconds * 1000L,
+                        1000
+                ) {
 
                     @Override
-                    public void onProgressChanged(
-                            SeekBar bar,
-                            int progress,
-                            boolean fromUser
+                    public void onTick(
+                            long millis
                     ) {
-                        float value =
-                                Math.max(0.05f, progress / 100f);
-
-                        WindowManager.LayoutParams p =
-                                getWindow().getAttributes();
-
-                        p.screenBrightness = value;
-                        getWindow().setAttributes(p);
+                        remainingSeconds =
+                                (int) (
+                                        millis / 1000
+                                );
                     }
 
                     @Override
-                    public void onStartTrackingTouch(SeekBar bar) {
-                    }
+                    public void onFinish() {
+                        remainingSeconds = 0;
 
-                    @Override
-                    public void onStopTrackingTouch(SeekBar bar) {
+                        if (examRunning) {
+                            toast(
+                                    "انتهى الوقت، سيتم تسليم الامتحان"
+                            );
+
+                            submitExam();
+                        }
                     }
-                }
+                };
+
+        examTimer.start();
+    }
+
+    private void showExamQuestion() {
+        setup("الامتحان");
+
+        TextView timer = text(
+                "الوقت المتبقي: " +
+                formatTime(remainingSeconds),
+                20,
+                GOLD
         );
 
-        new AlertDialog.Builder(this)
-                .setTitle("سطوع التطبيق")
-                .setView(seek)
-                .setPositiveButton(
-                        "حفظ",
-                        (d, w) ->
-                                prefs.edit()
-                                        .putInt(
-                                                "brightness",
-                                                seek.getProgress()
+        timer.setGravity(Gravity.CENTER);
+        timer.setTypeface(Typeface.DEFAULT_BOLD);
+
+        content.addView(timer);
+
+        TextView number = text(
+                "السؤال " +
+                (currentQuestion + 1) +
+                " من " +
+                questions.size(),
+                17,
+                darkMode ? WHITE : BLACK
+        );
+
+        content.addView(number);
+
+        JSONObject q =
+                questions.get(currentQuestion);
+
+        TextView question = text(
+                q.optString("text"),
+                20,
+                darkMode ? WHITE : BLACK
+        );
+
+        question.setTypeface(
+                Typeface.DEFAULT_BOLD
+        );
+
+        content.addView(question);
+
+        RadioGroup group =
+                new RadioGroup(this);
+
+        group.setOrientation(
+                RadioGroup.VERTICAL
+        );
+
+        JSONArray options =
+                q.optJSONArray("options");
+
+        for (int i = 0;
+             i < options.length();
+             i++) {
+
+            RadioButton rb =
+                    new RadioButton(this);
+
+            rb.setText(
+                    options.optString(i)
+            );
+
+            rb.setTextSize(17);
+            rb.setTextColor(
+                    darkMode ? WHITE : BLACK
+            );
+
+            final int index = i;
+
+            rb.setOnClickListener(
+                    v -> answers.set(
+                            currentQuestion,
+                            index
+                    )
                                        
