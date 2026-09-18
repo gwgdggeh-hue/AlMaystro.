@@ -1,69 +1,65 @@
 package com.almaystro.app;
 
-import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Activity;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
-import android.content.SharedPreferences;
 import android.text.InputType;
 import android.view.Gravity;
+import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
+import java.util.Random;
 
 public class MainActivity extends Activity {
 
-    // =========================================================
-    // VARIABLES
-    // =========================================================
-
-    private LinearLayout root;
     private LinearLayout content;
-    private LinearLayout bottomBar;
-
     private SharedPreferences prefs;
-
     private CountDownTimer examTimer;
 
     private boolean darkMode = true;
     private boolean examRunning = false;
 
-    private String currentStudent = "";
-    private String currentTeacher = "";
-    private String currentExamId = "";
-    private String currentExamCode = "";
+    private String studentName = "";
+    private String teacherName = "";
+    private String activeExamId = "";
+    private String activeCode = "";
 
-    private static final int GOLD = Color.rgb(224, 190, 70);
-    private static final int DARK_GREEN = Color.rgb(5, 38, 27);
-    private static final int GREEN = Color.rgb(14, 70, 48);
-    private static final int LIGHT_BG = Color.rgb(246, 242, 232);
-    private static final int WHITE = Color.WHITE;
-    private static final int BLACK = Color.rgb(30, 30, 30);
-    private static final int GRAY = Color.rgb(120, 120, 120);
+    private JSONArray activeQuestions = new JSONArray();
+    private int currentQuestion = 0;
+    private int remainingSeconds = 0;
+
+    private final int GOLD = Color.rgb(224, 190, 70);
+    private final int GREEN = Color.rgb(14, 70, 48);
+    private final int DARK = Color.rgb(5, 38, 27);
+    private final int WHITE = Color.WHITE;
+    private final int BLACK = Color.rgb(30, 30, 30);
+    private final int GRAY = Color.rgb(150, 150, 150);
 
     private static final String PREFS = "almaystro_data";
-
-    // =========================================================
-    // CREATE
-    // =========================================================
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
-
+        prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         darkMode = prefs.getBoolean("dark_mode", true);
 
+        seedData();
         applyBrightness();
-
         showWelcome();
     }
 
@@ -72,516 +68,148 @@ public class MainActivity extends Activity {
     // =========================================================
 
     private int dp(int value) {
-        return (int) (value *
-                getResources().getDisplayMetrics().density + 0.5f);
+        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
     }
 
     private int foreground() {
         return darkMode ? WHITE : BLACK;
     }
 
-    private int secondaryText() {
-        return darkMode ? Color.rgb(205, 205, 205) : GRAY;
+    private int secondary() {
+        return darkMode ? Color.rgb(210, 210, 210) : Color.rgb(90, 90, 90);
     }
 
-    private int cardColor() {
-        return darkMode ? Color.rgb(18, 58, 43) : WHITE;
+    private int surface() {
+        return darkMode ? Color.rgb(18, 55, 42) : Color.WHITE;
     }
 
-    private GradientDrawable roundedBackground(
-            int color,
-            int strokeColor,
-            int radius
-    ) {
-        GradientDrawable bg = new GradientDrawable();
-
-        bg.setColor(color);
-        bg.setCornerRadius(dp(radius));
-
-        if (strokeColor != Color.TRANSPARENT) {
-            bg.setStroke(dp(1), strokeColor);
-        }
-
-        return bg;
+    private GradientDrawable background() {
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(darkMode ? DARK : Color.rgb(245, 242, 234));
+        return g;
     }
 
-    private LinearLayout verticalLayout() {
-
-        LinearLayout layout = new LinearLayout(this);
-
-        layout.setOrientation(LinearLayout.VERTICAL);
-
-        return layout;
+    private GradientDrawable cardBackground() {
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(surface());
+        g.setCornerRadius(dp(18));
+        g.setStroke(dp(1), GOLD);
+        return g;
     }
 
-    private LinearLayout horizontalLayout() {
-
-        LinearLayout layout = new LinearLayout(this);
-
-        layout.setOrientation(LinearLayout.HORIZONTAL);
-
-        return layout;
-    }
-
-    private LinearLayout.LayoutParams margins(
-            int width,
-            int height,
-            int left,
-            int top,
-            int right,
-            int bottom
-    ) {
-
-        LinearLayout.LayoutParams p =
-                new LinearLayout.LayoutParams(width, height);
-
-        p.setMargins(
-                dp(left),
-                dp(top),
-                dp(right),
-                dp(bottom)
-        );
-
-        return p;
-    }
-
-    // =========================================================
-    // TEXT
-    // =========================================================
-
-    private TextView text(
-            String value,
-            float size,
-            int color,
-            boolean bold
-    ) {
-
+    private TextView text(String value, float size, int color, boolean bold) {
         TextView t = new TextView(this);
-
         t.setText(value);
         t.setTextSize(size);
         t.setTextColor(color);
-
-        t.setGravity(
-                Gravity.CENTER
-        );
-
-        t.setTypeface(
-                Typeface.DEFAULT,
-                bold ? Typeface.BOLD : Typeface.NORMAL
-        );
-
-        t.setPadding(
-                dp(8),
-                dp(8),
-                dp(8),
-                dp(8)
-        );
-
+        t.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        t.setTypeface(Typeface.DEFAULT, bold ? Typeface.BOLD : Typeface.NORMAL);
+        t.setPadding(dp(8), dp(8), dp(8), dp(8));
         return t;
     }
-
-    private TextView rightText(
-            String value,
-            float size,
-            int color,
-            boolean bold
-    ) {
-
-        TextView t = text(value, size, color, bold);
-
-        t.setGravity(
-                Gravity.RIGHT |
-                Gravity.CENTER_VERTICAL
-        );
-
-        return t;
-    }
-
-    // =========================================================
-    // BUTTON
-    // =========================================================
 
     private TextView button(String value) {
-
-        TextView b =
-                text(
-                        value,
-                        16,
-                        WHITE,
-                        true
-                );
-
+        TextView b = text(value, 16, WHITE, true);
         b.setGravity(Gravity.CENTER);
 
-        b.setBackground(
-                roundedBackground(
-                        GREEN,
-                        GOLD,
-                        20
-                )
-        );
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(GREEN);
+        g.setCornerRadius(dp(18));
+        g.setStroke(dp(1), GOLD);
 
-        b.setPadding(
-                dp(10),
-                dp(10),
-                dp(10),
-                dp(10)
-        );
+        b.setBackground(g);
 
-        b.setMinHeight(dp(55));
+        LinearLayout.LayoutParams p =
+                new LinearLayout.LayoutParams(-1, dp(55));
 
-        return b;
-    }
-
-    private TextView goldButton(String value) {
-
-        TextView b =
-                text(
-                        value,
-                        16,
-                        DARK_GREEN,
-                        true
-                );
-
-        b.setGravity(Gravity.CENTER);
-
-        b.setBackground(
-                roundedBackground(
-                        GOLD,
-                        Color.TRANSPARENT,
-                        20
-                )
-        );
-
-        b.setPadding(
-                dp(10),
-                dp(10),
-                dp(10),
-                dp(10)
-        );
-
-        b.setMinHeight(dp(55));
-
-        return b;
-    }
-
-    private TextView secondaryButton(String value) {
-
-        TextView b =
-                text(
-                        value,
-                        15,
-                        darkMode ? WHITE : GREEN,
-                        true
-                );
-
-        b.setGravity(Gravity.CENTER);
-
-        b.setBackground(
-                roundedBackground(
-                        cardColor(),
-                        GOLD,
-                        18
-                )
-        );
-
-        b.setMinHeight(dp(50));
+        p.setMargins(dp(8), dp(5), dp(8), dp(5));
+        b.setLayoutParams(p);
 
         return b;
     }
 
     private EditText input(String hint) {
-
         EditText e = new EditText(this);
 
         e.setHint(hint);
         e.setTextSize(16);
-
         e.setTextColor(foreground());
-        e.setHintTextColor(secondaryText());
-
-        e.setGravity(
-                Gravity.RIGHT |
-                Gravity.CENTER_VERTICAL
-        );
-
+        e.setHintTextColor(secondary());
+        e.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         e.setSingleLine(true);
+        e.setPadding(dp(15), dp(5), dp(15), dp(5));
 
-        e.setPadding(
-                dp(15),
-                dp(5),
-                dp(15),
-                dp(5)
-        );
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(surface());
+        g.setCornerRadius(dp(15));
+        g.setStroke(dp(1), GOLD);
 
-        e.setBackground(
-                roundedBackground(
-                        cardColor(),
-                        GOLD,
-                        16
-                )
-        );
+        e.setBackground(g);
+
+        LinearLayout.LayoutParams p =
+                new LinearLayout.LayoutParams(-1, dp(54));
+
+        p.setMargins(dp(8), dp(5), dp(8), dp(5));
+        e.setLayoutParams(p);
 
         return e;
     }
 
-    // =========================================================
-    // ROOT
-    // =========================================================
-
-    private void createRoot() {
-
-        root = verticalLayout();
-
-        root.setBackground(
-                darkMode
-                        ? createDarkGradient()
-                        : createLightGradient()
-        );
-
-        setContentView(root);
-    }
-
-    private GradientDrawable createDarkGradient() {
-
-        GradientDrawable g =
-                new GradientDrawable(
-                        GradientDrawable.Orientation.TL_BR,
-                        new int[]{
-                                DARK_GREEN,
-                                GREEN,
-                                DARK_GREEN
-                        }
-                );
-
-        return g;
-    }
-
-    private GradientDrawable createLightGradient() {
-
-        GradientDrawable g =
-                new GradientDrawable(
-                        GradientDrawable.Orientation.TL_BR,
-                        new int[]{
-                                LIGHT_BG,
-                                WHITE,
-                                Color.rgb(235, 230, 215)
-                        }
-                );
-
-        return g;
-    }
-
-    private void createScreen() {
-
-        createRoot();
+    private void base() {
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(10), dp(10), dp(10), dp(10));
+        root.setBackground(background());
+        root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
 
         ScrollView scroll = new ScrollView(this);
-
         scroll.setFillViewport(true);
+        scroll.addView(root);
 
-        content = verticalLayout();
-
-        content.setPadding(
-                dp(12),
-                dp(10),
-                dp(12),
-                dp(10)
-        );
-
-        scroll.addView(
-                content,
-                new ScrollView.LayoutParams(
-                        -1,
-                        -2
-                )
-        );
-
-        root.addView(
-                scroll,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        0,
-                        1
-                )
-        );
+        content = root;
+        setContentView(scroll);
     }
 
-    // =========================================================
-    // HEADER
-    // =========================================================
+    private void header(String title, String subtitle) {
+        content.addView(text("✦ ❖ ✦", 20, GOLD, true));
+        content.addView(text(title, 27, GOLD, true));
 
-    private void header(
-            String title,
-            String subtitle
-    ) {
-
-        TextView ornaments =
-                text(
-                        "✦   ❖   ✦",
-                        20,
-                        GOLD,
-                        true
-                );
-
-        content.addView(ornaments);
-
-        TextView titleView =
-                text(
-                        title,
-                        27,
-                        GOLD,
-                        true
-                );
-
-        titleView.setPadding(
-                dp(10),
-                dp(15),
-                dp(10),
-                dp(5)
-        );
-
-        content.addView(titleView);
-
-        if (subtitle != null &&
-                !subtitle.trim().isEmpty()) {
-
-            content.addView(
-                    text(
-                            subtitle,
-                            15,
-                            secondaryText(),
-                            false
-                    )
-            );
+        if (subtitle != null && !subtitle.isEmpty()) {
+            content.addView(text(subtitle, 15, secondary(), false));
         }
 
-        content.addView(
-                text(
-                        "❖",
-                        17,
-                        GOLD,
-                        true
-                )
-        );
+        content.addView(text("❖", 18, GOLD, true));
     }
 
-    // =========================================================
-    // ADD BUTTON
-    // =========================================================
-
-    private void addButton(
-            String value,
-            android.view.View.OnClickListener listener
-    ) {
-
+    private void addButton(String value, View.OnClickListener listener) {
         TextView b = button(value);
-
         b.setOnClickListener(listener);
-
-        content.addView(
-                b,
-                margins(
-                        -1,
-                        58,
-                        5,
-                        6,
-                        5,
-                        6
-                )
-        );
+        content.addView(b);
     }
 
-    private void addGoldButton(
-            String value,
-            android.view.View.OnClickListener listener
-    ) {
+    private void addCard(String value) {
+        TextView t = text(value, 16, foreground(), false);
+        t.setBackground(cardBackground());
 
-        TextView b = goldButton(value);
+        LinearLayout.LayoutParams p =
+                new LinearLayout.LayoutParams(-1, -2);
 
-        b.setOnClickListener(listener);
-
-        content.addView(
-                b,
-                margins(
-                        -1,
-                        58,
-                        5,
-                        6,
-                        5,
-                        6
-                )
-        );
+        p.setMargins(dp(5), dp(6), dp(5), dp(6));
+        content.addView(t, p);
     }
 
-    private void backButton(
-            android.view.View.OnClickListener listener
-    ) {
-
-        addButton(
-                "↩ رجوع",
-                listener
-        );
+    private void back(View.OnClickListener listener) {
+        addButton("↩ رجوع", listener);
     }
 
-    private void toast(String message) {
-
-        Toast.makeText(
-                this,
-                message,
-                Toast.LENGTH_SHORT
-        ).show();
+    private void toast(String value) {
+        Toast.makeText(this, value, Toast.LENGTH_SHORT).show();
     }
 
-    // =========================================================
-    // JSON STORAGE
-    // =========================================================
-
-    private JSONArray getArray(String key) {
-
-        String raw =
-                prefs.getString(
-                        key,
-                        "[]"
-                );
-
+    private int number(String value, int fallback) {
         try {
-            return new JSONArray(raw);
+            return Integer.parseInt(value.trim());
         } catch (Exception e) {
-            return new JSONArray();
-        }
-    }
-
-    private void saveArray(
-            String key,
-            JSONArray array
-    ) {
-
-        prefs.edit()
-                .putString(
-                        key,
-                        array.toString()
-                )
-                .apply();
-    }
-
-    private int number(
-            String value,
-            int fallback
-    ) {
-
-        try {
-
-            int n =
-                    Integer.parseInt(
-                            value.trim()
-                    );
-
-            return n;
-
-        } catch (Exception e) {
-
             return fallback;
         }
     }
@@ -591,122 +219,46 @@ public class MainActivity extends Activity {
     // =========================================================
 
     private void showWelcome() {
+        base();
 
-        examRunning = false;
-
-        if (examTimer != null) {
-            examTimer.cancel();
-            examTimer = null;
-        }
-
-        createScreen();
-
-        ImageView image =
-                new ImageView(this);
+        ImageView image = new ImageView(this);
 
         try {
-
-            image.setImageResource(
-                    R.drawable.maestro
-            );
-
+            image.setImageResource(R.drawable.maestro);
         } catch (Exception ignored) {
         }
 
-        image.setScaleType(
-                ImageView.ScaleType.CENTER_INSIDE
-        );
+        image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 
         content.addView(
                 image,
-                margins(
-                        -1,
-                        190,
-                        5,
-                        5,
-                        5,
-                        5
-                )
+                new LinearLayout.LayoutParams(-1, dp(190))
         );
 
-        content.addView(
-                text(
-                        "المايسترو",
-                        38,
-                        GOLD,
-                        true
-                )
-        );
+        content.addView(text("المايسترو", 38, GOLD, true));
+        content.addView(text("المايسترو شريف هيبه", 21, foreground(), true));
+        content.addView(text("هتتعلم التاريخ ببساطة", 18, secondary(), false));
+        content.addView(text("✦ منصة الامتحانات والمراجعة ✦", 15, GOLD, true));
 
-        content.addView(
-                text(
-                        "المايسترو شريف هيبه",
-                        21,
-                        foreground(),
-                        true
-                )
-        );
-
-        content.addView(
-                text(
-                        "هتتعلم التاريخ ببساطة",
-                        18,
-                        secondaryText(),
-                        false
-                )
-        );
-
-        content.addView(
-                text(
-                        "✦ منصة الامتحانات والمراجعة ✦",
-                        15,
-                        GOLD,
-                        true
-                )
-        );
-
-        addGoldButton(
-                "🚀 ابدأ الآن",
-                v -> roles()
-        );
+        addButton("🚀 ابدأ الآن", v -> roles());
 
         content.addView(
                 text(
                         "طالب • مدرس • امتحانات • نتائج • مذكرات • أذكار",
-                        13,
-                        secondaryText(),
+                        14,
+                        secondary(),
                         false
                 )
         );
     }
 
-    // =========================================================
-    // ROLES
-    // =========================================================
-
     private void roles() {
+        base();
+        header("مرحبًا بك في المايسترو", "اختر نوع الدخول");
 
-        createScreen();
-
-        header(
-                "مرحبًا بك في المايسترو",
-                "اختر نوع الدخول"
-        );
-
-        addGoldButton(
-                "👨‍🎓 أنا طالب",
-                v -> studentLogin()
-        );
-
-        addButton(
-                "👨‍🏫 أنا مدرس",
-                v -> teacherLogin()
-        );
-
-        addButton(
-                "ℹ️ عن التطبيق",
-                v -> about()
-        );
+        addButton("👨‍🎓 أنا طالب", v -> studentLogin());
+        addButton("👨‍🏫 أنا مدرس", v -> teacherLogin());
+        addButton("ℹ️ عن التطبيق", v -> about());
     }
 
     // =========================================================
@@ -714,156 +266,414 @@ public class MainActivity extends Activity {
     // =========================================================
 
     private void studentLogin() {
+        base();
+        header("دخول الطالب", "اكتب الاسم وكود الامتحان");
 
-        createScreen();
+        EditText name = input("اسم الطالب");
+        EditText code = input("كود الامتحان");
 
-        header(
-                "دخول الطالب",
-                "اكتب اسمك وكود الامتحان"
-        );
-
-        EditText name =
-                input("اسم الطالب");
-
-        EditText code =
-                input("كود الامتحان");
+        content.addView(name);
+        content.addView(code);
 
         content.addView(
-                name,
-                margins(
-                        -1,
-                        58,
-                        5,
-                        5,
-                        5,
-                        5
+                text(
+                        "للتجربة: DEMO123",
+                        14,
+                        GOLD,
+                        true
                 )
         );
 
-        content.addView(
-                code,
-                margins(
-                        -1,
-                        58,
-                        5,
-                        5,
-                        5,
-                        5
-                )
-        );
+        addButton("📝 دخول الامتحان", v -> {
 
-        addGoldButton(
-                "📝 دخول وبدء الامتحان",
-                v -> {
+            String n = name.getText().toString().trim();
+            String c = code.getText().toString().trim().toUpperCase(Locale.ROOT);
 
-                    String studentName =
-                            name.getText()
-                                    .toString()
-                                    .trim();
+            if (n.isEmpty()) {
+                name.setError("اكتب اسم الطالب");
+                return;
+            }
 
-                    String examCode =
-                            code.getText()
-                                    .toString()
-                                    .trim();
+            if (c.isEmpty()) {
+                code.setError("اكتب كود الامتحان");
+                return;
+            }
 
-                    if (studentName.isEmpty()) {
+            JSONObject exam = findExamByCode(c);
 
-                        name.setError(
-                                "اكتب اسم الطالب"
-                        );
+            if (exam == null) {
+                code.setError("الكود غير موجود");
+                return;
+            }
 
-                        return;
-                    }
+            String usedKey = n.toLowerCase(Locale.ROOT) + "|" + c;
 
-                    if (examCode.isEmpty()) {
+            if (isCodeUsed(usedKey)) {
+                code.setError("هذا الكود استُخدم بالفعل لهذا الطالب");
+                return;
+            }
 
-                        code.setError(
-                                "اكتب كود الامتحان"
-                        );
+            studentName = n;
+            activeCode = c;
+            activeExamId = exam.optString("id");
 
-                        return;
-                    }
+            startExam(exam);
+        });
 
-                    JSONObject exam =
-                            findExamByCode(
-                                    examCode
-                            );
-
-                    if (exam == null) {
-
-                        code.setError(
-                                "الكود غير موجود أو غير صالح"
-                        );
-
-                        return;
-                    }
-
-                    String useKey =
-                            studentName
-                                    .toLowerCase(Locale.ROOT)
-                                    + "|"
-                                    + examCode
-                                    .toLowerCase(Locale.ROOT);
-
-                    if (isCodeUsed(useKey)) {
-
-                        code.setError(
-                                "هذا الكود مستخدم بالفعل لهذا الطالب"
-                        );
-
-                        return;
-                    }
-
-                    currentStudent =
-                            studentName;
-
-                    currentExamCode =
-                            examCode;
-
-                    currentExamId =
-                            exam.optString(
-                                    "id"
-                            );
-
-                    markCodeUsed(useKey);
-
-                    startExam(exam);
-                }
-        );
-
-        backButton(
-                v -> roles()
-        );
+        back(v -> roles());
     }
 
     // =========================================================
-    // FIND EXAM
+    // STUDENT HOME
     // =========================================================
 
-    private JSONObject findExamById(
-            String id
-    ) {
+    private void studentHome() {
+        base();
+        header(
+                "أهلًا يا " +
+                        (studentName.isEmpty() ? "طالب" : studentName),
+                "لوحة الطالب"
+        );
 
-        JSONArray exams =
-                getArray("exams");
+        addCard(
+                "🎓 مرحبًا بك في المايسترو\n" +
+                        "منصة الامتحانات والمراجعة التعليمية"
+        );
 
-        for (int i = 0;
-             i < exams.length();
-             i++) {
+        addButton("📝 دخول امتحان", v -> studentLogin());
+        addButton("📊 امتحاناتي ونتائجي", v -> studentResults());
+        addButton("📚 مذكرات الشرح", v -> studentNotes());
+        addButton("🤲 الأذكار", v -> azkar());
+        addButton("🏆 تقدمي وإنجازاتي", v -> progress());
+        addButton("🔔 التحديثات", v -> updates());
+        addButton("⚙️ الإعدادات", v -> studentSettings());
+        addButton("ℹ️ عن التطبيق", v -> about());
 
+        studentNavigation();
+    }
+
+    // =========================================================
+    // STUDENT RESULTS
+    // =========================================================
+
+    private void studentResults() {
+        base();
+        header("امتحاناتي", studentName);
+
+        JSONArray results = array("results");
+        boolean found = false;
+
+        for (int i = 0; i < results.length(); i++) {
             try {
+                JSONObject r = results.getJSONObject(i);
 
-                JSONObject e =
-                        exams.getJSONObject(i);
+                if (!studentName.equals(r.optString("student"))) {
+                    continue;
+                }
 
-                if (id.equals(
-                        e.optString("id")
-                )) {
+                found = true;
 
-                    return e;
+                int total = r.optInt("total");
+                int correct = r.optInt("correct");
+                int answered = r.optInt("answered");
+
+                String mistakes = r.optString("mistakes", "");
+
+                StringBuilder s = new StringBuilder();
+
+                s.append("📝 ")
+                        .append(r.optString("exam"))
+                        .append("\n");
+
+                s.append("✅ الصحيح: ")
+                        .append(correct)
+                        .append("/")
+                        .append(total)
+                        .append("\n");
+
+                s.append("✍️ تمت الإجابة: ")
+                        .append(answered)
+                        .append("\n");
+
+                s.append("⬜ بدون إجابة: ")
+                        .append(total - answered)
+                        .append("\n");
+
+                if (!mistakes.isEmpty()) {
+                    s.append("\n❌ أخطاء للمراجعة:\n")
+                            .append(mistakes);
+                } else {
+                    s.append("\n🌟 لا توجد أخطاء.");
+                }
+
+                addCard(s.toString());
+
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (!found) {
+            addCard("لا توجد نتائج لهذا الطالب حتى الآن.");
+        }
+
+        back(v -> studentHome());
+        studentNavigation();
+    }
+
+    // =========================================================
+    // NOTES
+    // =========================================================
+
+    private void studentNotes() {
+        base();
+        header("مذكرات الشرح", "المذكرات المتاحة");
+
+        JSONArray notes = array("notes");
+
+        if (notes.length() == 0) {
+            addCard("لا توجد مذكرات حاليًا.");
+        }
+
+        for (int i = 0; i < notes.length(); i++) {
+            try {
+                JSONObject n = notes.getJSONObject(i);
+
+                addCard(
+                        "📖 " +
+                                n.optString("title") +
+                                "\n\n" +
+                                n.optString("body")
+                );
+
+            } catch (Exception ignored) {
+            }
+        }
+
+        back(v -> studentHome());
+        studentNavigation();
+    }
+
+    // =========================================================
+    // AZKAR
+    // =========================================================
+
+    private void azkar() {
+        base();
+        header("الأذكار", "ذكر الله وطمأنينة القلب");
+
+        addCard(
+                "☀️ أذكار الصباح\n\n" +
+                        "آية الكرسي\n" +
+                        "الإخلاص والفلق والناس\n" +
+                        "أصبحنا وأصبح الملك لله\n" +
+                        "سبحان الله وبحمده\n" +
+                        "أستغفر الله وأتوب إليه"
+        );
+
+        addCard(
+                "🌙 أذكار المساء\n\n" +
+                        "آية الكرسي\n" +
+                        "الإخلاص والفلق والناس\n" +
+                        "أمسينا وأمسى الملك لله\n" +
+                        "سبحان الله وبحمده\n" +
+                        "أستغفر الله وأتوب إليه"
+        );
+
+        addCard(
+                "📿 ورد الذكر\n\n" +
+                        "سبحان الله\n" +
+                        "الحمد لله\n" +
+                        "الله أكبر\n" +
+                        "لا إله إلا الله\n" +
+                        "أستغفر الله"
+        );
+
+        addButton("📿 عداد الذكر", v -> dhikrCounter());
+
+        back(v -> studentHome());
+        studentNavigation();
+    }
+
+    private void dhikrCounter() {
+        final int[] count = {0};
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(20), dp(20), dp(20), dp(20));
+
+        TextView number = text("0", 42, GOLD, true);
+        number.setGravity(Gravity.CENTER);
+
+        TextView plus = button("📿 اضغط للذكر");
+
+        plus.setOnClickListener(v -> {
+            count[0]++;
+            number.setText(String.valueOf(count[0]));
+        });
+
+        box.addView(number);
+        box.addView(plus);
+
+        new AlertDialog.Builder(this)
+                .setTitle("عداد الذكر")
+                .setView(box)
+                .setPositiveButton("إغلاق", null)
+                .show();
+    }
+
+    // =========================================================
+    // PROGRESS
+    // =========================================================
+
+    private void progress() {
+        base();
+        header("تقدمي وإنجازاتي", studentName);
+
+        JSONArray results = array("results");
+
+        int exams = 0;
+        int correct = 0;
+        int total = 0;
+
+        for (int i = 0; i < results.length(); i++) {
+            try {
+                JSONObject r = results.getJSONObject(i);
+
+                if (studentName.equals(r.optString("student"))) {
+                    exams++;
+                    correct += r.optInt("correct");
+                    total += r.optInt("total");
                 }
 
             } catch (Exception ignored) {
             }
-     }
+        }
+
+        addCard(
+                "🏆 الامتحانات المنجزة: " + exams +
+                        "\n\n✅ الإجابات الصحيحة: " + correct +
+                        "\n\n📚 إجمالي الأسئلة: " + total
+        );
+
+        addCard(
+                exams == 0
+                        ? "ابدأ أول امتحان لتسجيل أول إنجاز لك."
+                        : "🌟 استمر في المراجعة والتدريب."
+        );
+
+        back(v -> studentHome());
+        studentNavigation();
     }
+
+    // =========================================================
+    // UPDATES
+    // =========================================================
+
+    private void updates() {
+        base();
+        header("التحديثات", "آخر أخبار المايسترو");
+
+        addCard(
+                prefs.getString(
+                        "update",
+                        "🔔 لا توجد تحديثات جديدة حاليًا."
+                )
+        );
+
+        back(v -> studentHome());
+        studentNavigation();
+    }
+
+    // =========================================================
+    // STUDENT SETTINGS
+    // =========================================================
+
+    private void studentSettings() {
+        base();
+        header("الإعدادات", "تخصيص التطبيق");
+
+        addCard(
+                "👤 الطالب\n" +
+                        (studentName.isEmpty()
+                                ? "غير مسجل"
+                                : studentName)
+        );
+
+        addButton(
+                darkMode
+                        ? "☀️ تفعيل الوضع النهاري"
+                        : "🌙 تفعيل الوضع الليلي",
+                v -> {
+                    darkMode = !darkMode;
+
+                    prefs.edit()
+                            .putBoolean("dark_mode", darkMode)
+                            .apply();
+
+                    studentSettings();
+                }
+        );
+
+        addButton("🔆 التحكم في السطوع", v -> brightnessDialog());
+
+        addButton("🔐 الخصوصية والأمان", v -> privacy());
+
+        addButton("ℹ️ عن التطبيق", v -> about());
+
+        addButton("🚪 تسجيل الخروج", v -> {
+            studentName = "";
+            activeCode = "";
+            activeExamId = "";
+            roles();
+        });
+
+        back(v -> studentHome());
+    }
+
+    private void brightnessDialog() {
+        SeekBar seek = new SeekBar(this);
+        seek.setMax(100);
+
+        int saved = prefs.getInt("brightness", 100);
+        seek.setProgress(saved);
+
+        seek.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+
+                    @Override
+                    public void onProgressChanged(
+                            SeekBar bar,
+                            int progress,
+                            boolean fromUser
+                    ) {
+                        float value =
+                                Math.max(0.05f, progress / 100f);
+
+                        WindowManager.LayoutParams p =
+                                getWindow().getAttributes();
+
+                        p.screenBrightness = value;
+                        getWindow().setAttributes(p);
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar bar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar bar) {
+                    }
+                }
+        );
+
+        new AlertDialog.Builder(this)
+                .setTitle("سطوع التطبيق")
+                .setView(seek)
+                .setPositiveButton(
+                        "حفظ",
+                        (d, w) ->
+                                prefs.edit()
+                                        .putInt(
+                                                "brightness",
+                                                seek.getProgress()
+                                       
