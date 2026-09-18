@@ -386,7 +386,42 @@ public class MainActivity extends Activity {
         if(a.length()==0)content.addView(text("لا توجد أكواد.",17,fg()));
         for(int i=0;i<a.length();i++)try{
             JSONObject x=a.getJSONObject(i);
-            content.addView(te
+                        content.addView(
+                    text(
+                            "الكود: " + x.optString("code") +
+                            "\nالامتحان: " + x.optString("exam"),
+                            16,
+                            fg()
+                    )
+            );
+        }catch(Exception ignored){}
+
+        teacherBack();
+    }
+
+    // =========================================================
+    // ABOUT
+    // =========================================================
+
+    private void showAbout() {
+
+        new AlertDialog.Builder(this)
+                .setTitle("ℹ️ عن المايسترو")
+                .setMessage(
+                        "المايسترو\n\n" +
+                        "المايسترو شريف هيبه\n" +
+                        "هتتعلم التاريخ ببساطة 📚\n\n" +
+                        "تطبيق تعليمي للطلاب والمدرسين، " +
+                        "ويحتوي على الامتحانات والنتائج والمذكرات والأذكار.\n\n" +
+                        "مع المبرمج أو المطور محمود كليب\n" +
+                        "للتواصل: 01112244710"
+                )
+                .setPositiveButton(
+                        "حسنًا",
+                        null
+                )
+                .show();
+    }
 // =========================================================
     // ABOUT
     // =========================================================
