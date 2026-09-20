@@ -1,747 +1,181 @@
-package com.almaystro.app;
+package com.almaestro.program;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.*;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Locale;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-    private LinearLayout content;
-    private LinearLayout bottomBar;
-    private SharedPreferences prefs;
-    private CountDownTimer examTimer;
-
-    private boolean darkMode;
-    private boolean examRunning = false;
-
-    private String studentName = "";
-    private String teacherName = "";
-    private String activeExam = "";
-
-    private int currentQuestion = 0;
-    private int remainingSeconds = 0;
-
-    private final ArrayList<JSONObject> questions = new ArrayList<>();
-    private final ArrayList<Integer> answers = new ArrayList<>();
-
-    private final int GREEN = Color.rgb(8, 67, 46);
-    private final int GOLD = Color.rgb(220, 184, 70);
-    private final int DARK = Color.rgb(25, 29, 27);
-    private final int LIGHT = Color.rgb(247, 247, 244);
-    private final int WHITE = Color.WHITE;
-    private final int BLACK = Color.BLACK;
-    private final int GRAY = Color.rgb(110, 110, 110);
+    private int GOLD = Color.rgb(212, 175, 55);
+    private int DARK_GREEN = Color.rgb(18, 72, 52);
+    private int WHITE = Color.WHITE;
+    private int BLACK = Color.rgb(25, 25, 25);
+    private int GRAY = Color.rgb(245, 245, 245);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getWindow().setFlags(
-                WindowManager.LayoutParams.FLAG_SECURE,
-                WindowManager.LayoutParams.FLAG_SECURE
-        );
-
-        prefs = getSharedPreferences("almaystro_data", MODE_PRIVATE);
-
-        darkMode = prefs.getBoolean("dark_mode", false);
-        studentName = prefs.getString("student_name", "");
-        teacherName = prefs.getString("teacher_name", "");
-
-        createDefaultData();
-        welcome();
+        showWelcomeScreen();
     }
 
-    private void createDefaultData() {
-        if (!prefs.contains("exams")) {
-            try {
-                JSONArray exams = new JSONArray();
+    private void showWelcomeScreen() {
 
-                JSONObject exam = new JSONObject();
-                exam.put("name", "امتحان التاريخ التجريبي");
-                exam.put("duration", 10);
-                exam.put("code", "123456");
+        LinearLayout main = new LinearLayout(this);
+        main.setOrientation(LinearLayout.VERTICAL);
+        main.setGravity(Gravity.CENTER);
+        main.setPadding(40, 60, 40, 40);
+        main.setBackgroundColor(DARK_GREEN);
 
-                JSONArray qs = new JSONArray();
+        TextView logo = new TextView(this);
+        logo.setText("🎓");
+        logo.setTextSize(70);
+        logo.setGravity(Gravity.CENTER);
 
-                qs.put(makeQuestion(
-                        "من هو مؤسس الدولة الأيوبية؟",
-                        new String[]{
-                                "صلاح الدين الأيوبي",
-                                "عمرو بن العاص",
-                                "محمد علي",
-                                "أحمد عرابي"
-                        },
-                        0,
-                        "صلاح الدين الأيوبي هو مؤسس الدولة الأيوبية."
-                ));
+        TextView title = new TextView(this);
+        title.setText("المايسترو");
+        title.setTextSize(38);
+        title.setTextColor(GOLD);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
 
-                qs.put(makeQuestion(
-                        "ما عاصمة مصر؟",
-                        new String[]{
-                                "الإسكندرية",
-                                "القاهرة",
-                                "الجيزة",
-                                "أسوان"
-                        },
-                        1,
-                        "القاهرة هي عاصمة جمهورية مصر العربية."
-                ));
+        TextView subtitle = new TextView(this);
+        subtitle.setText("منصة تعليمية لمادة التاريخ");
+        subtitle.setTextSize(19);
+        subtitle.setTextColor(WHITE);
+        subtitle.setGravity(Gravity.CENTER);
+        subtitle.setPadding(0, 15, 0, 10);
 
-                qs.put(makeQuestion(
-                        "من أسس مدينة القاهرة؟",
-                        new String[]{
-                                "الفاطميون",
-                                "المماليك",
-                                "الرومان",
-                                "العثمانيون"
-                        },
-                        0,
-                        "أسس الفاطميون مدينة القاهرة."
-                ));
+        TextView welcome = new TextView(this);
+        welcome.setText("أهلاً بك في المايسترو\nهنا يبدأ طريقك نحو التفوق");
+        welcome.setTextSize(21);
+        welcome.setTextColor(WHITE);
+        welcome.setGravity(Gravity.CENTER);
+        welcome.setPadding(0, 30, 0, 50);
 
-                exam.put("questions", qs);
-                exams.put(exam);
+        Button startButton = new Button(this);
+        startButton.setText("ابدأ الآن");
+        startButton.setTextSize(20);
+        startButton.setTextColor(BLACK);
+        startButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
 
-                prefs.edit()
-                        .putString("exams", exams.toString())
-                        .apply();
+        GradientDrawable buttonBackground = new GradientDrawable();
+        buttonBackground.setColor(GOLD);
+        buttonBackground.setCornerRadius(40);
+        startButton.setBackground(buttonBackground);
 
-            } catch (Exception ignored) {
-            }
-        }
-
-        if (!prefs.contains("notes")) {
-            try {
-                JSONArray notes = new JSONArray();
-
-                notes.put(makeNote(
-                        "مراجعة التاريخ",
-                        "راجع أهم الأحداث والشخصيات والتواريخ قبل دخول الامتحان."
-                ));
-
-                notes.put(makeNote(
-                        "نصيحة المايسترو",
-                        "اقرأ السؤال بهدوء وحدد المطلوب قبل اختيار الإجابة."
-                ));
-
-                prefs.edit()
-                        .putString("notes", notes.toString())
-                        .apply();
-
-            } catch (Exception ignored) {
-            }
-        }
-
-        if (!prefs.contains("groups")) {
-            JSONArray groups = new JSONArray();
-
-            groups.put("جروب أولى بكالوريا بنات");
-            groups.put("جروب أولى بكالوريا ولاد");
-            groups.put("جروب تانية بكالوريا بنات");
-            groups.put("جروب تانية بكالوريا ولاد");
-            groups.put("طلاب المايسترو تالتة إعدادي");
-            groups.put("جروب ذكرى ومنفعة");
-
-            prefs.edit()
-                    .putString("groups", groups.toString())
-                    .apply();
-        }
-    }
-
-    private JSONObject makeQuestion(
-            String title,
-            String[] options,
-            int correct,
-            String explanation
-    ) {
-        JSONObject q = new JSONObject();
-
-        try {
-            q.put("text", title);
-            q.put("correct", correct);
-            q.put("explanation", explanation);
-
-            JSONArray a = new JSONArray();
-
-            for (String option : options) {
-                a.put(option);
-            }
-
-            q.put("options", a);
-
-        } catch (Exception ignored) {
-        }
-
-        return q;
-    }
-
-    private JSONObject makeNote(String title, String body) {
-        JSONObject n = new JSONObject();
-
-        try {
-            n.put("title", title);
-            n.put("body", body);
-        } catch (Exception ignored) {
-        }
-
-        return n;
-    }
-
-    private void setup(String title) {
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(darkMode ? DARK : LIGHT);
-
-        LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.VERTICAL);
-        header.setGravity(Gravity.CENTER);
-        header.setPadding(15, 25, 15, 25);
-        header.setBackgroundColor(GREEN);
-
-        TextView titleText = text(title, 23, GOLD);
-        titleText.setGravity(Gravity.CENTER);
-        titleText.setTypeface(Typeface.DEFAULT_BOLD);
-
-        header.addView(titleText);
-
-        root.addView(
-                header,
+        LinearLayout.LayoutParams buttonParams =
                 new LinearLayout.LayoutParams(
-                        -1,
-                        -2
-                )
-        );
-
-        ScrollView scroll = new ScrollView(this);
-
-        content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(18, 18, 18, 18);
-
-        scroll.addView(content);
-
-        root.addView(
-                scroll,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        0,
-                        1
-                )
-        );
-
-        bottomBar = new LinearLayout(this);
-        bottomBar.setOrientation(LinearLayout.HORIZONTAL);
-        bottomBar.setGravity(Gravity.CENTER);
-        bottomBar.setBackgroundColor(GREEN);
-
-        root.addView(
-                bottomBar,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        60
-                )
-        );
-
-        setContentView(root);
-    }
-
-    private TextView text(String value, float size, int color) {
-        TextView t = new TextView(this);
-
-        t.setText(value);
-        t.setTextSize(size);
-        t.setTextColor(color);
-        t.setPadding(5, 10, 5, 10);
-
-        return t;
-    }
-
-    private EditText input(String hint) {
-        EditText e = new EditText(this);
-
-        e.setHint(hint);
-        e.setTextSize(16);
-        e.setSingleLine(true);
-        e.setPadding(15, 10, 15, 10);
-
-        e.setTextColor(darkMode ? WHITE : BLACK);
-        e.setHintTextColor(
-                darkMode ? Color.LTGRAY : GRAY
-        );
-
-        return e;
-    }
-
-    private Button button(
-            String title,
-            View.OnClickListener listener
-    ) {
-        Button b = new Button(this);
-
-        b.setText(title);
-        b.setTextSize(16);
-        b.setTextColor(WHITE);
-        b.setBackgroundColor(GREEN);
-        b.setOnClickListener(listener);
-
-        LinearLayout.LayoutParams p =
-                new LinearLayout.LayoutParams(
-                        -1,
-                        -2
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        65
                 );
 
-        p.setMargins(0, 7, 0, 7);
-        b.setLayoutParams(p);
+        buttonParams.setMargins(20, 10, 20, 20);
 
-        return b;
+        main.addView(logo);
+        main.addView(title);
+        main.addView(subtitle);
+        main.addView(welcome);
+        main.addView(startButton, buttonParams);
+
+        setContentView(main);
+
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showRoleScreen();
+            }
+        });
     }
 
-    private void bottomButton(
-            String title,
-            View.OnClickListener listener
-    ) {
-        Button b = new Button(this);
+    private void showRoleScreen() {
 
-        b.setText(title);
-        b.setTextSize(11);
-        b.setTextColor(WHITE);
-        b.setBackgroundColor(Color.TRANSPARENT);
-        b.setOnClickListener(listener);
+        LinearLayout main = new LinearLayout(this);
+        main.setOrientation(LinearLayout.VERTICAL);
+        main.setGravity(Gravity.CENTER);
+        main.setPadding(35, 50, 35, 40);
+        main.setBackgroundColor(GRAY);
 
-        bottomBar.addView(
-                b,
+        TextView title = new TextView(this);
+        title.setText("مرحباً بك في المايسترو");
+        title.setTextSize(28);
+        title.setTextColor(DARK_GREEN);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 0, 0, 40);
+
+        TextView question = new TextView(this);
+        question.setText("من فضلك اختر نوع الحساب");
+        question.setTextSize(21);
+        question.setTextColor(BLACK);
+        question.setGravity(Gravity.CENTER);
+        question.setPadding(0, 0, 0, 35);
+
+        Button studentButton = new Button(this);
+        studentButton.setText("👨‍🎓  طالب");
+        studentButton.setTextSize(20);
+        studentButton.setTextColor(WHITE);
+        studentButton.setBackgroundColor(DARK_GREEN);
+
+        Button teacherButton = new Button(this);
+        teacherButton.setText("👨‍🏫  مدرس");
+        teacherButton.setTextSize(20);
+        teacherButton.setTextColor(BLACK);
+        teacherButton.setBackgroundColor(GOLD);
+
+        LinearLayout.LayoutParams params =
                 new LinearLayout.LayoutParams(
-                        0,
-                        -1,
-                        1
-                )
-        );
-    }
-
-    private void welcome() {
-        setup("المايسترو");
-
-        TextView welcomeText = text(
-                "🎓\n\n" +
-                "المايسترو شريف هيبه\n\n" +
-                "هتتعلم التاريخ ببساطة",
-                24,
-                darkMode ? WHITE : GREEN
-        );
-
-        welcomeText.setGravity(Gravity.CENTER);
-        welcomeText.setTypeface(Typeface.DEFAULT_BOLD);
-
-        content.addView(welcomeText);
-
-        content.addView(
-                button(
-                        "👨‍🎓 أنا طالب",
-                        v -> studentLogin()
-                )
-        );
-
-        content.addView(
-                button(
-                        "👨‍🏫 أنا مدرس",
-                        v -> teacherLogin()
-                )
-        );
-
-        content.addView(
-                button(
-                        "⚙ الإعدادات",
-                        v -> settings()
-                )
-        );
-    }
-
-    private void studentLogin() {
-        setup("دخول الطالب");
-
-        content.addView(
-                text(
-                        "اكتب اسم الطالب وكود الامتحان",
-                        18,
-                        darkMode ? WHITE : BLACK
-                )
-        );
-
-        EditText name = input("اسم الطالب");
-        EditText code = input("كود الامتحان");
-
-        content.addView(name);
-        content.addView(code);
-
-        content.addView(
-                button(
-                        "دخول",
-                        v -> {
-
-                            String n =
-                                    name.getText()
-                                            .toString()
-                                            .trim();
-
-                            String c =
-                                    code.getText()
-                                            .toString()
-                                            .trim();
-
-                            if (n.isEmpty() || c.isEmpty()) {
-                                toast("اكتب الاسم والكود");
-                                return;
-                            }
-
-                            JSONArray exams = getExams();
-
-                            for (int i = 0;
-                                 i < exams.length();
-                                 i++) {
-
-                                try {
-                                    JSONObject exam =
-                                            exams.getJSONObject(i);
-
-                                    if (c.equals(
-                                            exam.optString("code")
-                                    )) {
-
-                                        studentName = n;
-
-                                        prefs.edit()
-                                                .putString(
-                                                        "student_name",
-                                                        n
-                                                )
-                                                .apply();
-
-                                        startExam(exam);
-                                        return;
-                                    }
-
-                                } catch (Exception ignored) {
-                                }
-                            }
-
-                            toast("كود الامتحان غير صحيح");
-                        }
-                )
-        );
-
-        content.addView(
-                button(
-                        "رجوع",
-                        v -> welcome()
-                )
-        );
-    }
-
-    private void studentHome() {
-        setup("المايسترو - الطالب");
-
-        content.addView(
-                text(
-                        "أهلًا يا " + studentName + " 👋",
-                        22,
-                        GOLD
-                )
-        );
-
-        content.addView(
-                button(
-                        "📝 الامتحانات",
-                        v -> studentExams()
-                )
-        );
-
-        content.addView(
-                button(
-                        "📊 امتحاناتي ونتائجي",
-                        v -> studentResults()
-                )
-        );
-
-        content.addView(
-                button(
-                        "📚 المذكرات",
-                        v -> notes()
-                )
-        );
-
-        content.addView(
-                button(
-                        "📿 الأذكار",
-                        v -> azkar()
-                )
-        );
-
-        content.addView(
-                button(
-                        "⚙ الإعدادات",
-                        v -> settings()
-                )
-        );
-
-        bottomButton(
-                "الرئيسية",
-                v -> studentHome()
-        );
-
-        bottomButton(
-                "امتحاناتي",
-                v -> studentResults()
-        );
-
-        bottomButton(
-                "أذكار",
-                v -> azkar()
-        );
-
-        bottomButton(
-                "مذكرات",
-                v -> notes()
-        );
-
-        bottomButton(
-                "إعدادات",
-                v -> settings()
-        );
-    }
-
-    private void studentExams() {
-        setup("الامتحانات");
-
-        JSONArray exams = getExams();
-
-        if (exams.length() == 0) {
-            content.addView(
-                    text(
-                            "لا توجد امتحانات.",
-                            18,
-                            GRAY
-                    )
-            );
-        }
-
-        for (int i = 0;
-             i < exams.length();
-             i++) {
-
-            try {
-                JSONObject exam =
-                        exams.getJSONObject(i);
-
-                final JSONObject selectedExam = exam;
-
-                int count =
-                        exam.optJSONArray(
-                                "questions"
-                        ).length();
-
-                content.addView(
-                        text(
-                                exam.optString("name") +
-                                "\nالمدة: " +
-                                exam.optInt("duration") +
-                                " دقيقة" +
-                                "\nعدد الأسئلة: " +
-                                count,
-                                17,
-                                darkMode ? WHITE : BLACK
-                        )
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        70
                 );
 
-                content.addView(
-                        button(
-                                "دخول الامتحان",
-                                v -> startExam(selectedExam)
-                        )
-                );
+        params.setMargins(20, 15, 20, 15);
 
-            } catch (Exception ignored) {
+        main.addView(title);
+        main.addView(question);
+        main.addView(studentButton, params);
+        main.addView(teacherButton, params);
+
+        setContentView(main);
+
+        studentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showStudentScreen();
             }
-        }
+        });
 
-        content.addView(
-                button(
-                        "رجوع",
-                        v -> studentHome()
-                )
-        );
+        teacherButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showTeacherScreen();
+            }
+        });
     }
 
-    private void startExam(JSONObject exam) {
-        if (examRunning) {
-            toast("يوجد امتحان مفتوح بالفعل");
-            return;
-        }
+    private void showStudentScreen() {
 
-        try {
-            JSONArray arr =
-                    exam.optJSONArray("questions");
-
-            if (arr == null || arr.length() == 0) {
-                toast("الامتحان لا يحتوي على أسئلة");
-                return;
-            }
-
-            questions.clear();
-            answers.clear();
-
-            for (int i = 0;
-                 i < arr.length();
-                 i++) {
-
-                questions.add(
-                        arr.getJSONObject(i)
-                );
-
-                answers.add(-1);
-            }
-
-            activeExam =
-                    exam.optString("name");
-
-            remainingSeconds =
-                    exam.optInt("duration", 10) * 60;
-
-            currentQuestion = 0;
-            examRunning = true;
-
-            showExamQuestion();
-            startExamTimer();
-
-        } catch (Exception e) {
-            toast("حدث خطأ في فتح الامتحان");
-            examRunning = false;
-        }
+        Toast.makeText(
+                this,
+                "قسم الطالب سيتم تجهيزه في الخطوة القادمة",
+                Toast.LENGTH_LONG
+        ).show();
     }
 
-    private void startExamTimer() {
-        if (examTimer != null) {
-            examTimer.cancel();
-        }
+    private void showTeacherScreen() {
 
-        examTimer =
-                new CountDownTimer(
-                        remainingSeconds * 1000L,
-                        1000
-                ) {
-
-                    @Override
-                    public void onTick(
-                            long millis
-                    ) {
-                        remainingSeconds =
-                                (int) (
-                                        millis / 1000
-                                );
-                    }
-
-                    @Override
-                    public void onFinish() {
-                        remainingSeconds = 0;
-
-                        if (examRunning) {
-                            toast(
-                                    "انتهى الوقت، سيتم تسليم الامتحان"
-                            );
-
-                            submitExam();
-                        }
-                    }
-                };
-
-        examTimer.start();
+        Toast.makeText(
+                this,
+                "قسم المدرس سيتم تجهيزه في الخطوة القادمة",
+                Toast.LENGTH_LONG
+        ).show();
     }
-
-    private void showExamQuestion() {
-        setup("الامتحان");
-
-        TextView timer = text(
-                "الوقت المتبقي: " +
-                formatTime(remainingSeconds),
-                20,
-                GOLD
-        );
-
-        timer.setGravity(Gravity.CENTER);
-        timer.setTypeface(Typeface.DEFAULT_BOLD);
-
-        content.addView(timer);
-
-        TextView number = text(
-                "السؤال " +
-                (currentQuestion + 1) +
-                " من " +
-                questions.size(),
-                17,
-                darkMode ? WHITE : BLACK
-        );
-
-        content.addView(number);
-
-        JSONObject q =
-                questions.get(currentQuestion);
-
-        TextView question = text(
-                q.optString("text"),
-                20,
-                darkMode ? WHITE : BLACK
-        );
-
-        question.setTypeface(
-                Typeface.DEFAULT_BOLD
-        );
-
-        content.addView(question);
-
-        RadioGroup group =
-                new RadioGroup(this);
-
-        group.setOrientation(
-                RadioGroup.VERTICAL
-        );
-
-        JSONArray options =
-                q.optJSONArray("options");
-
-        for (int i = 0;
-             i < options.length();
-             i++) {
-
-            RadioButton rb =
-                    new RadioButton(this);
-
-            rb.setText(
-                    options.optString(i)
-            );
-
-            rb.setTextSize(17);
-            rb.setTextColor(
-                    darkMode ? WHITE : BLACK
-            );
-
-            final int index = i;
-
-            rb.setOnClickListener(
-                    v -> answers.set(
-                            currentQuestion,
-                            index
-                    )
-                                       
+                         }
