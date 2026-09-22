@@ -1,9 +1,8 @@
-package com.almaestro.program;
+package com.almaystro.app;
 
 import android.app.Activity;
-import android.os.Bundle;
 import android.graphics.Color;
-import android.graphics.Typeface;
+import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -12,62 +11,47 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
-    private int DARK_GREEN = Color.rgb(27, 94, 32);
-    private int GOLD = Color.rgb(212, 175, 55);
-    private int WHITE = Color.WHITE;
-    private int BLACK = Color.BLACK;
+    private final int DARK_GREEN = Color.rgb(5, 38, 27);
+    private final int GOLD = Color.rgb(224, 190, 70);
+    private final int WHITE = Color.WHITE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        showWelcomeScreen();
+        showWelcome();
     }
 
-    private void showWelcomeScreen() {
+    private void showWelcome() {
 
-        LinearLayout main = new LinearLayout(this);
-        main.setOrientation(LinearLayout.VERTICAL);
-        main.setGravity(Gravity.CENTER);
-        main.setPadding(40, 40, 40, 40);
-        main.setBackgroundColor(DARK_GREEN);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setGravity(Gravity.CENTER);
+        root.setPadding(40, 40, 40, 40);
+        root.setBackgroundColor(DARK_GREEN);
 
         TextView title = new TextView(this);
         title.setText("المايسترو");
         title.setTextColor(GOLD);
-        title.setTextSize(38);
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        title.setTextSize(34);
         title.setGravity(Gravity.CENTER);
+        title.setTypeface(null, 1);
 
-        LinearLayout.LayoutParams titleParams =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
+        TextView teacher = new TextView(this);
+        teacher.setText("المايسترو شريف هيبه");
+        teacher.setTextColor(WHITE);
+        teacher.setTextSize(22);
+        teacher.setGravity(Gravity.CENTER);
 
-        titleParams.setMargins(0, 0, 0, 25);
-        main.addView(title, titleParams);
+        TextView subtitle = new TextView(this);
+        subtitle.setText("هتتعلم التاريخ ببساطة");
+        subtitle.setTextColor(WHITE);
+        subtitle.setTextSize(18);
+        subtitle.setGravity(Gravity.CENTER);
 
-        TextView welcome = new TextView(this);
-        welcome.setText("مرحبًا بك في تطبيق المايسترو");
-        welcome.setTextColor(WHITE);
-        welcome.setTextSize(21);
-        welcome.setGravity(Gravity.CENTER);
-
-        LinearLayout.LayoutParams welcomeParams =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-
-        welcomeParams.setMargins(0, 0, 0, 50);
-        main.addView(welcome, welcomeParams);
-
-        Button startButton = new Button(this);
-        startButton.setText("ابدأ الآن");
-        startButton.setTextSize(20);
-        startButton.setTextColor(BLACK);
-        startButton.setBackgroundColor(GOLD);
+        Button start = new Button(this);
+        start.setText("ابدأ الآن");
+        start.setTextSize(18);
 
         LinearLayout.LayoutParams buttonParams =
                 new LinearLayout.LayoutParams(
@@ -75,80 +59,91 @@ public class MainActivity extends Activity {
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
 
-        main.addView(startButton, buttonParams);
+        buttonParams.setMargins(0, 50, 0, 0);
 
-        startButton.setOnClickListener(new View.OnClickListener() {
+        root.addView(title);
+        root.addView(teacher);
+        root.addView(subtitle);
+        root.addView(start, buttonParams);
+
+        start.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                showRoleScreen();
+            public void onClick(View v) {
+                showRoles();
             }
         });
 
-        setContentView(main);
+        setContentView(root);
     }
 
-    private void showRoleScreen() {
+    private void showRoles() {
 
-        LinearLayout main = new LinearLayout(this);
-        main.setOrientation(LinearLayout.VERTICAL);
-        main.setGravity(Gravity.CENTER);
-        main.setPadding(40, 40, 40, 40);
-        main.setBackgroundColor(DARK_GREEN);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setGravity(Gravity.CENTER);
+        root.setPadding(40, 40, 40, 40);
+        root.setBackgroundColor(DARK_GREEN);
 
         TextView title = new TextView(this);
-        title.setText("اختر نوع المستخدم");
+        title.setText("اختر نوع الحساب");
         title.setTextColor(GOLD);
-        title.setTextSize(30);
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        title.setTextSize(28);
         title.setGravity(Gravity.CENTER);
+        title.setTypeface(null, 1);
 
-        main.addView(title);
+        Button student = new Button(this);
+        student.setText("طالب");
+        student.setTextSize(18);
 
-        Button studentButton = new Button(this);
-        studentButton.setText("طالب");
-        studentButton.setTextSize(20);
-        studentButton.setTextColor(BLACK);
-        studentButton.setBackgroundColor(GOLD);
+        Button teacher = new Button(this);
+        teacher.setText("مدرس");
+        teacher.setTextSize(18);
 
-        LinearLayout.LayoutParams p1 =
+        LinearLayout.LayoutParams params =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
 
-        p1.setMargins(0, 50, 0, 20);
-        main.addView(studentButton, p1);
+        params.setMargins(0, 30, 0, 0);
 
-        Button teacherButton = new Button(this);
-        teacherButton.setText("معلم");
-        teacherButton.setTextSize(20);
-        teacherButton.setTextColor(BLACK);
-        teacherButton.setBackgroundColor(GOLD);
+        root.addView(title);
+        root.addView(student, params);
+        root.addView(teacher, params);
 
-        main.addView(teacherButton);
-
-        studentButton.setOnClickListener(new View.OnClickListener() {
+        student.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                showMessage("تم اختيار الطالب");
+            public void onClick(View v) {
+                showMessage("قسم الطالب");
             }
         });
 
-        teacherButton.setOnClickListener(new View.OnClickListener() {
+        teacher.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                showMessage("تم اختيار المعلم");
+            public void onClick(View v) {
+                showMessage("قسم المدرس");
             }
         });
 
-        setContentView(main);
+        setContentView(root);
     }
 
     private void showMessage(String message) {
-        android.widget.Toast.makeText(
-                this,
-                message,
-                android.widget.Toast.LENGTH_SHORT
-        ).show();
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setGravity(Gravity.CENTER);
+        root.setPadding(40, 40, 40, 40);
+        root.setBackgroundColor(DARK_GREEN);
+
+        TextView text = new TextView(this);
+        text.setText(message);
+        text.setTextColor(GOLD);
+        text.setTextSize(28);
+        text.setGravity(Gravity.CENTER);
+
+        root.addView(text);
+
+        setContentView(root);
     }
-            }
+    }
