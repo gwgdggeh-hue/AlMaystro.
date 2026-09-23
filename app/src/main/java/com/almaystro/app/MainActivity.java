@@ -4,11 +4,14 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
@@ -29,14 +32,14 @@ public class MainActivity extends Activity {
         showWelcome();
     }
 
-    private GradientDrawable roundedBackground(int color, float radius) {
+    private GradientDrawable background(int color, float radius) {
         GradientDrawable drawable = new GradientDrawable();
         drawable.setColor(color);
         drawable.setCornerRadius(radius);
         return drawable;
     }
 
-    private GradientDrawable borderedCard() {
+    private GradientDrawable cardBackground() {
         GradientDrawable drawable = new GradientDrawable();
         drawable.setColor(GREEN);
         drawable.setCornerRadius(35);
@@ -44,40 +47,39 @@ public class MainActivity extends Activity {
         return drawable;
     }
 
-    private TextView makeText(
+    private TextView text(
             String value,
             float size,
             int color,
             int gravity
     ) {
-        TextView text = new TextView(this);
+        TextView view = new TextView(this);
 
-        text.setText(value);
-        text.setTextSize(size);
-        text.setTextColor(color);
-        text.setGravity(gravity);
+        view.setText(value);
+        view.setTextSize(size);
+        view.setTextColor(color);
+        view.setGravity(gravity);
+        view.setIncludeFontPadding(true);
 
-        text.setIncludeFontPadding(true);
-
-        return text;
+        return view;
     }
 
-    private LinearLayout.LayoutParams layoutParams(
+    private LinearLayout.LayoutParams params(
             int width,
             int height,
             int top,
             int bottom
     ) {
-        LinearLayout.LayoutParams params =
+        LinearLayout.LayoutParams p =
                 new LinearLayout.LayoutParams(width, height);
 
-        params.setMargins(0, top, 0, bottom);
+        p.setMargins(0, top, 0, bottom);
 
-        return params;
+        return p;
     }
 
-    private TextView decoration() {
-        return makeText(
+    private TextView decorations() {
+        return text(
                 "✦  ✧  ❖  ✧  ✦",
                 22,
                 GOLD,
@@ -85,30 +87,77 @@ public class MainActivity extends Activity {
         );
     }
 
-    private Button mainButton(String value) {
-
+    private Button goldButton(String title) {
         Button button = new Button(this);
 
-        button.setText(value);
+        button.setText(title);
         button.setTextSize(18);
         button.setTextColor(DARK_GREEN);
-
         button.setAllCaps(false);
         button.setGravity(Gravity.CENTER);
 
-        // مهم جدًا: منع قص الكلام داخل الزر
         button.setMinHeight(0);
         button.setMinimumHeight(0);
         button.setIncludeFontPadding(true);
-
-        // مساحة داخلية مريحة للنص
-        button.setPadding(20, 10, 20, 10);
+        button.setPadding(20, 12, 20, 12);
 
         button.setBackground(
-                roundedBackground(GOLD, 50)
+                background(GOLD, 50)
         );
 
         return button;
+    }
+
+    private Button outlineButton(String title) {
+        Button button = new Button(this);
+
+        button.setText(title);
+        button.setTextSize(17);
+        button.setTextColor(GOLD);
+        button.setAllCaps(false);
+        button.setGravity(Gravity.CENTER);
+
+        button.setMinHeight(0);
+        button.setMinimumHeight(0);
+        button.setIncludeFontPadding(true);
+        button.setPadding(20, 10, 20, 10);
+
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(GREEN);
+        drawable.setCornerRadius(50);
+        drawable.setStroke(2, GOLD);
+
+        button.setBackground(drawable);
+
+        return button;
+    }
+
+    private EditText inputField(
+            String hint,
+            int inputType
+    ) {
+        EditText editText = new EditText(this);
+
+        editText.setHint(hint);
+        editText.setHintTextColor(Color.rgb(170, 180, 175));
+        editText.setTextColor(WHITE);
+        editText.setTextSize(17);
+
+        editText.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+
+        editText.setSingleLine(true);
+        editText.setInputType(inputType);
+
+        editText.setPadding(20, 5, 20, 5);
+
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(Color.rgb(12, 68, 48));
+        drawable.setCornerRadius(30);
+        drawable.setStroke(2, GOLD);
+
+        editText.setBackground(drawable);
+
+        return editText;
     }
 
     private void showWelcome() {
@@ -121,8 +170,8 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(DARK_GREEN);
 
         root.addView(
-                decoration(),
-                layoutParams(
+                decorations(),
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         5,
@@ -130,7 +179,7 @@ public class MainActivity extends Activity {
                 )
         );
 
-        TextView welcome = makeText(
+        TextView welcome = text(
                 "أهلاً وسهلاً بك",
                 20,
                 LIGHT_GOLD,
@@ -141,7 +190,7 @@ public class MainActivity extends Activity {
 
         root.addView(
                 welcome,
-                layoutParams(
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         5,
@@ -149,15 +198,14 @@ public class MainActivity extends Activity {
                 )
         );
 
-        // بطاقة المايسترو
         LinearLayout card = new LinearLayout(this);
 
         card.setOrientation(LinearLayout.VERTICAL);
         card.setGravity(Gravity.CENTER);
         card.setPadding(25, 28, 25, 28);
-        card.setBackground(borderedCard());
+        card.setBackground(cardBackground());
 
-        TextView title = makeText(
+        TextView title = text(
                 "المايسترو",
                 40,
                 GOLD,
@@ -166,17 +214,9 @@ public class MainActivity extends Activity {
 
         title.setTypeface(null, 1);
 
-        card.addView(
-                title,
-                layoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        0,
-                        10
-                )
-        );
+        card.addView(title);
 
-        TextView teacher = makeText(
+        TextView teacher = text(
                 "المايسترو شريف هيبه",
                 23,
                 WHITE,
@@ -187,32 +227,24 @@ public class MainActivity extends Activity {
 
         card.addView(
                 teacher,
-                layoutParams(
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
-                        4,
+                        8,
                         8
                 )
         );
 
-        TextView line = makeText(
+        TextView line = text(
                 "━━━━━━━━━━━━",
                 18,
                 GOLD,
                 Gravity.CENTER
         );
 
-        card.addView(
-                line,
-                layoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        0,
-                        8
-                )
-        );
+        card.addView(line);
 
-        TextView subtitle = makeText(
+        TextView subtitle = text(
                 "هتتعلم التاريخ ببساطة",
                 19,
                 LIGHT_GOLD,
@@ -223,34 +255,26 @@ public class MainActivity extends Activity {
 
         card.addView(
                 subtitle,
-                layoutParams(
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
-                        4,
+                        8,
                         8
                 )
         );
 
-        TextView description = makeText(
+        TextView description = text(
                 "تعلم • اختبر نفسك • تابع مستواك",
                 14,
                 GRAY,
                 Gravity.CENTER
         );
 
-        card.addView(
-                description,
-                layoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        4,
-                        0
-                )
-        );
+        card.addView(description);
 
         root.addView(
                 card,
-                layoutParams(
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         8,
@@ -258,16 +282,14 @@ public class MainActivity extends Activity {
                 )
         );
 
-        TextView middleDecoration = makeText(
-                "❖  ───── ✦ ─────  ❖",
-                20,
-                GOLD,
-                Gravity.CENTER
-        );
-
         root.addView(
-                middleDecoration,
-                layoutParams(
+                text(
+                        "❖  ───── ✦ ─────  ❖",
+                        20,
+                        GOLD,
+                        Gravity.CENTER
+                ),
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         2,
@@ -275,12 +297,11 @@ public class MainActivity extends Activity {
                 )
         );
 
-        // زر ابدأ الآن
-        Button startButton = mainButton("ابدأ الآن");
+        Button start = goldButton("ابدأ الآن");
 
         root.addView(
-                startButton,
-                layoutParams(
+                start,
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         0,
@@ -288,31 +309,21 @@ public class MainActivity extends Activity {
                 )
         );
 
-        TextView footer = makeText(
-                "منصة المايسترو التعليمية",
-                14,
-                GRAY,
-                Gravity.CENTER
-        );
-
         root.addView(
-                footer,
-                layoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
-                        0
+                text(
+                        "منصة المايسترو التعليمية",
+                        14,
+                        GRAY,
+                        Gravity.CENTER
                 )
         );
 
-        startButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        showRoles();
-                    }
-                }
-        );
+        start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showRoles();
+            }
+        });
 
         setContentView(root);
     }
@@ -327,8 +338,8 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(DARK_GREEN);
 
         root.addView(
-                decoration(),
-                layoutParams(
+                decorations(),
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         5,
@@ -336,7 +347,7 @@ public class MainActivity extends Activity {
                 )
         );
 
-        TextView title = makeText(
+        TextView title = text(
                 "مرحباً بك في المايسترو",
                 28,
                 GOLD,
@@ -345,41 +356,32 @@ public class MainActivity extends Activity {
 
         title.setTypeface(null, 1);
 
+        root.addView(title);
+
         root.addView(
-                title,
-                layoutParams(
+                text(
+                        "اختر نوع الحساب للمتابعة",
+                        17,
+                        WHITE,
+                        Gravity.CENTER
+                ),
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         5,
-                        8
-                )
-        );
-
-        TextView subtitle = makeText(
-                "اختر نوع الحساب للمتابعة",
-                17,
-                WHITE,
-                Gravity.CENTER
-        );
-
-        root.addView(
-                subtitle,
-                layoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        3,
                         25
                 )
         );
 
-        LinearLayout studentCard = createRoleCard(
+        LinearLayout student = roleCard(
+                "★",
                 "طالب",
                 "الدخول إلى الامتحانات والنتائج"
         );
 
         root.addView(
-                studentCard,
-                layoutParams(
+                student,
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         5,
@@ -387,14 +389,15 @@ public class MainActivity extends Activity {
                 )
         );
 
-        LinearLayout teacherCard = createRoleCard(
+        LinearLayout teacher = roleCard(
+                "◆",
                 "مدرس",
                 "إدارة الامتحانات والطلاب والنتائج"
         );
 
         root.addView(
-                teacherCard,
-                layoutParams(
+                teacher,
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         5,
@@ -402,45 +405,34 @@ public class MainActivity extends Activity {
                 )
         );
 
-        TextView bottomDecoration = makeText(
-                "❖  ───── ✦ ─────  ❖",
-                20,
-                GOLD,
-                Gravity.CENTER
-        );
-
         root.addView(
-                bottomDecoration,
-                layoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        15,
-                        5
+                text(
+                        "❖  ───── ✦ ─────  ❖",
+                        20,
+                        GOLD,
+                        Gravity.CENTER
                 )
         );
 
-        studentCard.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        showMessage("قسم الطالب");
-                    }
-                }
-        );
+        student.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showStudentLogin();
+            }
+        });
 
-        teacherCard.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        showMessage("قسم المدرس");
-                    }
-                }
-        );
+        teacher.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showMessage("قسم المدرس");
+            }
+        });
 
         setContentView(root);
     }
 
-    private LinearLayout createRoleCard(
+    private LinearLayout roleCard(
+            String iconValue,
             String titleValue,
             String descriptionValue
     ) {
@@ -450,16 +442,16 @@ public class MainActivity extends Activity {
         card.setOrientation(LinearLayout.VERTICAL);
         card.setGravity(Gravity.CENTER);
         card.setPadding(20, 20, 20, 20);
-        card.setBackground(borderedCard());
+        card.setBackground(cardBackground());
 
-        TextView icon = makeText(
-                titleValue.equals("طالب") ? "★" : "◆",
+        TextView icon = text(
+                iconValue,
                 30,
                 GOLD,
                 Gravity.CENTER
         );
 
-        TextView title = makeText(
+        TextView title = text(
                 titleValue,
                 23,
                 WHITE,
@@ -468,7 +460,7 @@ public class MainActivity extends Activity {
 
         title.setTypeface(null, 1);
 
-        TextView description = makeText(
+        TextView description = text(
                 descriptionValue,
                 14,
                 GRAY,
@@ -482,6 +474,227 @@ public class MainActivity extends Activity {
         return card;
     }
 
+    private void showStudentLogin() {
+
+        LinearLayout root = new LinearLayout(this);
+
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setGravity(Gravity.CENTER);
+        root.setPadding(24, 25, 24, 25);
+        root.setBackgroundColor(DARK_GREEN);
+
+        root.addView(
+                decorations(),
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        5,
+                        15
+                )
+        );
+
+        TextView title = text(
+                "مرحباً يا طالب المايسترو",
+                27,
+                GOLD,
+                Gravity.CENTER
+        );
+
+        title.setTypeface(null, 1);
+
+        root.addView(
+                title,
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        5,
+                        8
+                )
+        );
+
+        TextView subtitle = text(
+                "أدخل بياناتك للمتابعة",
+                17,
+                WHITE,
+                Gravity.CENTER
+        );
+
+        root.addView(
+                subtitle,
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        3,
+                        20
+                )
+        );
+
+        LinearLayout card = new LinearLayout(this);
+
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(22, 25, 22, 25);
+        card.setBackground(cardBackground());
+
+        TextView nameLabel = text(
+                "اسم الطالب",
+                17,
+                LIGHT_GOLD,
+                Gravity.RIGHT
+        );
+
+        card.addView(
+                nameLabel,
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        0,
+                        6
+                )
+        );
+
+        EditText nameInput = inputField(
+                "اكتب اسمك",
+                InputType.TYPE_CLASS_TEXT |
+                        InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        );
+
+        card.addView(
+                nameInput,
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        58,
+                        0,
+                        18
+                )
+        );
+
+        TextView codeLabel = text(
+                "كود الامتحان",
+                17,
+                LIGHT_GOLD,
+                Gravity.RIGHT
+        );
+
+        card.addView(
+                codeLabel,
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        0,
+                        6
+                )
+        );
+
+        EditText codeInput = inputField(
+                "اكتب كود الامتحان",
+                InputType.TYPE_CLASS_TEXT |
+                        InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
+        );
+
+        card.addView(
+                codeInput,
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        58,
+                        0,
+                        22
+                )
+        );
+
+        Button loginButton = goldButton("دخول إلى الامتحان");
+
+        card.addView(
+                loginButton,
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        0,
+                        5
+                )
+        );
+
+        root.addView(
+                card,
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        5,
+                        18
+                )
+        );
+
+        Button back = outlineButton("رجوع");
+
+        root.addView(
+                back,
+                params(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        5,
+                        10
+                )
+        );
+
+        root.addView(
+                text(
+                        "❖  ───── ✦ ─────  ❖",
+                        20,
+                        GOLD,
+                        Gravity.CENTER
+                )
+        );
+
+        loginButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        String name =
+                                nameInput.getText().toString().trim();
+
+                        String code =
+                                codeInput.getText().toString().trim();
+
+                        if (name.isEmpty()) {
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "اكتب اسم الطالب أولاً",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                            return;
+                        }
+
+                        if (code.isEmpty()) {
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "اكتب كود الامتحان أولاً",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                            return;
+                        }
+
+                        showMessage(
+                                "تم إدخال بيانات الطالب\n\n"
+                                        + name
+                                        + "\n\nالكود: "
+                                        + code
+                        );
+                    }
+                }
+        );
+
+        back.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        showRoles();
+                    }
+                }
+        );
+
+        setContentView(root);
+    }
+
     private void showMessage(String message) {
 
         LinearLayout root = new LinearLayout(this);
@@ -492,8 +705,8 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(DARK_GREEN);
 
         root.addView(
-                decoration(),
-                layoutParams(
+                decorations(),
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         5,
@@ -501,9 +714,9 @@ public class MainActivity extends Activity {
                 )
         );
 
-        TextView title = makeText(
+        TextView title = text(
                 message,
-                30,
+                24,
                 GOLD,
                 Gravity.CENTER
         );
@@ -512,31 +725,35 @@ public class MainActivity extends Activity {
 
         root.addView(
                 title,
-                layoutParams(
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         5,
-                        15
+                        20
                 )
         );
 
-        TextView info = makeText(
-                "سيتم تجهيز هذا القسم في المرحلة القادمة",
-                17,
-                WHITE,
-                Gravity.CENTER
-        );
+        Button back = outlineButton("رجوع");
 
         root.addView(
-                info,
-                layoutParams(
+                back,
+                params(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         5,
-                        0
+                        5
                 )
+        );
+
+        back.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        showRoles();
+                    }
+                }
         );
 
         setContentView(root);
     }
-            }
+}
