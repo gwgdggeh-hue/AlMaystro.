@@ -1220,3 +1220,270 @@ public class MainActivity extends Activity {
 
     // =========================
     // المؤقت
+// المؤقت
+    // =========================
+
+    private void startTimer() {
+
+        if (examTimer != null) {
+            examTimer.cancel();
+        }
+
+        examTimer =
+                new CountDownTimer(
+                        timeLeft,
+                        1000
+                ) {
+
+                    @Override
+                    public void onTick(
+                            long millis
+                    ) {
+
+                        timeLeft =
+                                millis;
+
+                        if (timerView != null) {
+
+                            timerView.setText(
+                                    formatTime(millis)
+                            );
+
+                            if (millis <= 30000) {
+
+                                timerView.setTextColor(
+                                        RED
+                                );
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFinish() {
+
+                        timeLeft = 0;
+
+                        examTimer = null;
+
+                        Toast.makeText(
+                                MainActivity.this,
+                                "انتهى وقت الامتحان",
+                                Toast.LENGTH_LONG
+                        ).show();
+
+                        calculateScore();
+                    }
+                };
+
+        examTimer.start();
+    }
+
+    private String formatTime(
+            long millis
+    ) {
+
+        long seconds =
+                millis / 1000;
+
+        long minutes =
+                seconds / 60;
+
+        seconds =
+                seconds % 60;
+
+        return String.format(
+                Locale.US,
+                "%02d:%02d",
+                minutes,
+                seconds
+        );
+    }
+
+    // =========================
+    // النتيجة
+    // =========================
+
+    private void finishExam() {
+
+        if (examTimer != null) {
+
+            examTimer.cancel();
+            examTimer = null;
+        }
+
+        calculateScore();
+    }
+
+    private void calculateScore() {
+
+        score = 0;
+
+        for (int i = 0;
+             i < correctAnswers.length;
+             i++) {
+
+            if (selectedAnswers[i] ==
+                    correctAnswers[i]) {
+
+                score++;
+            }
+        }
+
+        showResult();
+    }
+
+    private void showResult() {
+
+        LinearLayout root = baseLayout();
+
+        root.addView(
+                ornament(),
+                lp(
+                        -1,
+                        -2,
+                        10,
+                        15
+                )
+        );
+
+        TextView title =
+                tv(
+                        "نتيجة الامتحان",
+                        30,
+                        GOLD,
+                        Gravity.CENTER
+                );
+
+        title.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
+
+        root.addView(title);
+
+        root.addView(
+                tv(
+                        "الطالب: "
+                                + studentName,
+                        17,
+                        WHITE,
+                        Gravity.CENTER
+                ),
+                lp(
+                        -1,
+                        -2,
+                        12,
+                        5
+                )
+        );
+
+        LinearLayout card =
+                new LinearLayout(this);
+
+        card.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        card.setGravity(
+                Gravity.CENTER
+        );
+
+        card.setPadding(
+                25,
+                30,
+                25,
+                30
+        );
+
+        card.setBackground(
+                outlinedCard()
+        );
+
+        TextView scoreText =
+                tv(
+                        score
+                                + " / "
+                                + questions.length,
+                        45,
+                        GOLD,
+                        Gravity.CENTER
+                );
+
+        scoreText.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
+
+        card.addView(scoreText);
+
+        int wrong =
+                questions.length - score;
+
+        card.addView(
+                tv(
+                        "الإجابات الصحيحة: "
+                                + score,
+                        17,
+                        WHITE,
+                        Gravity.CENTER
+                ),
+                lp(
+                        -1,
+                        -2,
+                        12,
+                        5
+                )
+        );
+
+        card.addView(
+                tv(
+                        "الإجابات الخاطئة: "
+                                + wrong,
+                        17,
+                        GOLD_LIGHT,
+                        Gravity.CENTER
+                )
+        );
+
+        root.addView(
+                card,
+                lp(
+                        -1,
+                        -2,
+                        20,
+                        20
+                )
+        );
+
+        Button again =
+                goldButton(
+                        "العودة إلى الطالب"
+                );
+
+        root.addView(
+                again,
+                lp(
+                        -1,
+                        58,
+                        5,
+                        10
+                )
+        );
+
+        again.setOnClickListener(
+                new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        showStudentLogin();
+                    }
+                }
+        );
+
+        setContentView(
+                scroll(root)
+        );
+    }
+
+    // =========================
+    // دخول المدرس
