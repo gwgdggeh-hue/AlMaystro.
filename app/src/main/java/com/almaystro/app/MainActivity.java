@@ -1,9 +1,12 @@
 package com.almaystro.app;
 
 import android.app.Activity;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -11,25 +14,54 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Locale;
+
 public class MainActivity extends Activity {
 
-    private static final int DARK_GREEN = Color.rgb(4, 35, 25);
+    // =========================
+    // ألوان التطبيق
+    // =========================
+
+    private static final int DARK = Color.rgb(3, 34, 24);
     private static final int GREEN = Color.rgb(8, 57, 40);
+    private static final int GREEN_2 = Color.rgb(12, 70, 49);
     private static final int GOLD = Color.rgb(224, 190, 70);
-    private static final int LIGHT_GOLD = Color.rgb(248, 225, 145);
+    private static final int GOLD_LIGHT = Color.rgb(248, 225, 145);
     private static final int WHITE = Color.WHITE;
-    private static final int GRAY = Color.rgb(210, 210, 210);
+    private static final int GRAY = Color.rgb(205, 210, 207);
+    private static final int RED = Color.rgb(220, 80, 70);
+
+    // =========================
+    // بيانات الطالب
+    // =========================
 
     private String studentName = "";
     private String examCode = "";
 
+    // =========================
+    // الامتحان
+    // =========================
+
     private int currentQuestion = 0;
     private int score = 0;
 
-    private int[] answers = {-1, -1, -1, -1, -1};
+    private final int[] selectedAnswers = {
+            -1, -1, -1, -1, -1
+    };
+
+    private CountDownTimer examTimer;
+    private long timeLeft = 5 * 60 * 1000;
+
+    private TextView timerView;
+
+    // =========================
+    // أسئلة تجريبية فقط
+    // سيتم لاحقاً نقلها إلى Firebase
+    // =========================
 
     private final String[] questions = {
             "ما هي السنة التي سميت بعام الجماعة؟",
@@ -40,11 +72,36 @@ public class MainActivity extends Activity {
     };
 
     private final String[][] choices = {
-            {"41 هـ", "40 هـ", "42 هـ", "43 هـ"},
-            {"عمر بن الخطاب", "أبو بكر الصديق", "عثمان بن عفان", "علي بن أبي طالب"},
-            {"دمشق", "بغداد", "القاهرة", "المدينة"},
-            {"آسيا", "أفريقيا", "أوروبا", "أمريكا"},
-            {"النيل", "الفرات", "دجلة", "الأردن"}
+            {
+                    "41 هـ",
+                    "40 هـ",
+                    "42 هـ",
+                    "43 هـ"
+            },
+            {
+                    "عمر بن الخطاب",
+                    "أبو بكر الصديق",
+                    "عثمان بن عفان",
+                    "علي بن أبي طالب"
+            },
+            {
+                    "دمشق",
+                    "بغداد",
+                    "القاهرة",
+                    "المدينة"
+            },
+            {
+                    "آسيا",
+                    "أفريقيا",
+                    "أوروبا",
+                    "أمريكا"
+            },
+            {
+                    "النيل",
+                    "الفرات",
+                    "دجلة",
+                    "الأردن"
+            }
     };
 
     private final int[] correctAnswers = {
@@ -55,61 +112,122 @@ public class MainActivity extends Activity {
             0
     };
 
+    // =========================
+    // بداية التطبيق
+    // =========================
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getWindow().setStatusBarColor(DARK_GREEN);
-        getWindow().setNavigationBarColor(DARK_GREEN);
+        getWindow().setStatusBarColor(DARK);
+        getWindow().setNavigationBarColor(DARK);
 
         showWelcome();
     }
 
-    private GradientDrawable background(int color, float radius) {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(color);
-        drawable.setCornerRadius(radius);
-        return drawable;
+    // =========================
+    // أدوات التصميم
+    // =========================
+
+    private GradientDrawable bg(int color, float radius) {
+
+        GradientDrawable d = new GradientDrawable();
+
+        d.setColor(color);
+        d.setCornerRadius(radius);
+
+        return d;
     }
 
-    private GradientDrawable cardBackground() {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(GREEN);
-        drawable.setCornerRadius(35);
-        drawable.setStroke(3, GOLD);
-        return drawable;
+    private GradientDrawable outlinedCard() {
+
+        GradientDrawable d = new GradientDrawable();
+
+        d.setColor(GREEN);
+        d.setCornerRadius(32);
+        d.setStroke(2, GOLD);
+
+        return d;
     }
 
-    private TextView text(
-            String value,
+    private TextView tv(
+            String text,
             float size,
             int color,
             int gravity
     ) {
-        TextView view = new TextView(this);
-        view.setText(value);
-        view.setTextSize(size);
-        view.setTextColor(color);
-        view.setGravity(gravity);
-        view.setIncludeFontPadding(true);
-        return view;
+
+        TextView t = new TextView(this);
+
+        t.setText(text);
+        t.setTextSize(size);
+        t.setTextColor(color);
+        t.setGravity(gravity);
+        t.setIncludeFontPadding(true);
+
+        return t;
     }
 
-    private LinearLayout.LayoutParams params(
+    private LinearLayout.LayoutParams lp(
             int width,
             int height,
             int top,
             int bottom
     ) {
+
         LinearLayout.LayoutParams p =
                 new LinearLayout.LayoutParams(width, height);
 
         p.setMargins(0, top, 0, bottom);
+
         return p;
     }
 
-    private TextView decorations() {
-        return text(
+    private Button goldButton(String title) {
+
+        Button b = new Button(this);
+
+        b.setText(title);
+        b.setTextSize(17);
+        b.setTextColor(DARK);
+        b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        b.setGravity(Gravity.CENTER);
+        b.setAllCaps(false);
+
+        b.setPadding(18, 8, 18, 8);
+
+        b.setBackground(
+                bg(GOLD, 60)
+        );
+
+        return b;
+    }
+
+    private Button outlineButton(String title) {
+
+        Button b = new Button(this);
+
+        b.setText(title);
+        b.setTextSize(16);
+        b.setTextColor(GOLD);
+        b.setGravity(Gravity.CENTER);
+        b.setAllCaps(false);
+
+        GradientDrawable d = new GradientDrawable();
+
+        d.setColor(GREEN);
+        d.setCornerRadius(60);
+        d.setStroke(2, GOLD);
+
+        b.setBackground(d);
+
+        return b;
+    }
+
+    private TextView ornament() {
+
+        return tv(
                 "✦  ✧  ❖  ✧  ✦",
                 22,
                 GOLD,
@@ -117,152 +235,166 @@ public class MainActivity extends Activity {
         );
     }
 
-    private Button goldButton(String title) {
+    private EditText input(
+            String hint
+    ) {
 
-        Button button = new Button(this);
+        EditText e = new EditText(this);
 
-        button.setText(title);
-        button.setTextSize(18);
-        button.setTextColor(DARK_GREEN);
-        button.setAllCaps(false);
-        button.setGravity(Gravity.CENTER);
+        e.setHint(hint);
+        e.setHintTextColor(Color.rgb(160, 175, 168));
+        e.setTextColor(WHITE);
+        e.setTextSize(17);
+        e.setSingleLine(true);
 
-        button.setMinHeight(0);
-        button.setMinimumHeight(0);
-        button.setIncludeFontPadding(true);
-        button.setPadding(20, 12, 20, 12);
-
-        button.setBackground(
-                background(GOLD, 50)
+        e.setGravity(
+                Gravity.RIGHT |
+                        Gravity.CENTER_VERTICAL
         );
 
-        return button;
+        e.setPadding(18, 5, 18, 5);
+
+        GradientDrawable d = new GradientDrawable();
+
+        d.setColor(GREEN_2);
+        d.setCornerRadius(30);
+        d.setStroke(2, GOLD);
+
+        e.setBackground(d);
+
+        return e;
     }
 
-    private Button outlineButton(String title) {
-
-        Button button = new Button(this);
-
-        button.setText(title);
-        button.setTextSize(17);
-        button.setTextColor(GOLD);
-        button.setAllCaps(false);
-        button.setGravity(Gravity.CENTER);
-
-        button.setMinHeight(0);
-        button.setMinimumHeight(0);
-        button.setIncludeFontPadding(true);
-        button.setPadding(20, 10, 20, 10);
-
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(GREEN);
-        drawable.setCornerRadius(50);
-        drawable.setStroke(2, GOLD);
-
-        button.setBackground(drawable);
-
-        return button;
-    }
-
-    private EditText inputField(String hint, int inputType) {
-
-        EditText editText = new EditText(this);
-
-        editText.setHint(hint);
-        editText.setHintTextColor(Color.rgb(170, 180, 175));
-        editText.setTextColor(WHITE);
-        editText.setTextSize(17);
-        editText.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        editText.setSingleLine(true);
-        editText.setInputType(inputType);
-        editText.setPadding(20, 5, 20, 5);
-
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.rgb(12, 68, 48));
-        drawable.setCornerRadius(30);
-        drawable.setStroke(2, GOLD);
-
-        editText.setBackground(drawable);
-
-        return editText;
-    }
-
-    private void showWelcome() {
+    private LinearLayout baseLayout() {
 
         LinearLayout root = new LinearLayout(this);
 
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setGravity(Gravity.CENTER);
-        root.setPadding(24, 20, 24, 24);
-        root.setBackgroundColor(DARK_GREEN);
+        root.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        root.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        root.setPadding(
+                20,
+                20,
+                20,
+                20
+        );
+
+        root.setBackgroundColor(DARK);
+
+        return root;
+    }
+
+    private ScrollView scroll(LinearLayout content) {
+
+        ScrollView scroll = new ScrollView(this);
+
+        scroll.setFillViewport(true);
+
+        scroll.addView(content);
+
+        return scroll;
+    }
+
+    // =========================
+    // شاشة الترحيب
+    // =========================
+
+    private void showWelcome() {
+
+        LinearLayout root = baseLayout();
 
         root.addView(
-                decorations(),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
+                ornament(),
+                lp(
+                        -1,
+                        -2,
+                        8,
                         8
                 )
         );
 
-        TextView welcome = text(
+        TextView welcome = tv(
                 "أهلاً وسهلاً بك",
-                20,
-                LIGHT_GOLD,
+                21,
+                GOLD_LIGHT,
                 Gravity.CENTER
         );
 
-        welcome.setTypeface(null, 1);
+        welcome.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
 
         root.addView(
                 welcome,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                lp(
+                        -1,
+                        -2,
                         5,
-                        18
+                        15
                 )
         );
 
         LinearLayout card = new LinearLayout(this);
 
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setGravity(Gravity.CENTER);
-        card.setPadding(25, 28, 25, 28);
-        card.setBackground(cardBackground());
+        card.setOrientation(
+                LinearLayout.VERTICAL
+        );
 
-        TextView title = text(
+        card.setGravity(Gravity.CENTER);
+
+        card.setPadding(
+                22,
+                28,
+                22,
+                28
+        );
+
+        card.setBackground(
+                outlinedCard()
+        );
+
+        TextView title = tv(
                 "المايسترو",
                 40,
                 GOLD,
                 Gravity.CENTER
         );
 
-        title.setTypeface(null, 1);
+        title.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
+
         card.addView(title);
 
-        TextView teacher = text(
+        TextView teacher = tv(
                 "المايسترو شريف هيبه",
                 23,
                 WHITE,
                 Gravity.CENTER
         );
 
-        teacher.setTypeface(null, 1);
+        teacher.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
 
         card.addView(
                 teacher,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                lp(
+                        -1,
+                        -2,
                         8,
                         8
                 )
         );
 
         card.addView(
-                text(
+                tv(
                         "━━━━━━━━━━━━",
                         18,
                         GOLD,
@@ -270,27 +402,30 @@ public class MainActivity extends Activity {
                 )
         );
 
-        TextView subtitle = text(
+        TextView slogan = tv(
                 "هتتعلم التاريخ ببساطة",
                 19,
-                LIGHT_GOLD,
+                GOLD_LIGHT,
                 Gravity.CENTER
         );
 
-        subtitle.setTypeface(null, 1);
+        slogan.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
 
         card.addView(
-                subtitle,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        8,
+                slogan,
+                lp(
+                        -1,
+                        -2,
+                        10,
                         8
                 )
         );
 
         card.addView(
-                text(
+                tv(
                         "تعلم • اختبر نفسك • تابع مستواك",
                         14,
                         GRAY,
@@ -300,43 +435,45 @@ public class MainActivity extends Activity {
 
         root.addView(
                 card,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        8,
+                lp(
+                        -1,
+                        -2,
+                        5,
                         18
                 )
         );
 
         root.addView(
-                text(
+                tv(
                         "❖  ───── ✦ ─────  ❖",
                         20,
                         GOLD,
                         Gravity.CENTER
                 ),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                lp(
+                        -1,
+                        -2,
                         2,
                         12
                 )
         );
 
-        Button start = goldButton("ابدأ الآن");
+        Button start = goldButton(
+                "ابدأ الآن"
+        );
 
         root.addView(
                 start,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        0,
+                lp(
+                        -1,
+                        60,
+                        5,
                         12
                 )
         );
 
         root.addView(
-                text(
+                tv(
                         "منصة المايسترو التعليمية",
                         14,
                         GRAY,
@@ -344,94 +481,126 @@ public class MainActivity extends Activity {
                 )
         );
 
-        start.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoles();
-            }
-        });
+        start.setOnClickListener(
+                new View.OnClickListener() {
 
-        setContentView(root);
+                    @Override
+                    public void onClick(View v) {
+                        showRoles();
+                    }
+                }
+        );
+
+        setContentView(
+                scroll(root)
+        );
     }
+
+    // =========================
+    // اختيار نوع المستخدم
+    // =========================
 
     private void showRoles() {
 
-        LinearLayout root = new LinearLayout(this);
-
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setGravity(Gravity.CENTER);
-        root.setPadding(24, 25, 24, 25);
-        root.setBackgroundColor(DARK_GREEN);
+        LinearLayout root = baseLayout();
 
         root.addView(
-                decorations(),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
-                        18
+                ornament(),
+                lp(
+                        -1,
+                        -2,
+                        15,
+                        15
                 )
         );
 
-        TextView title = text(
+        TextView title = tv(
                 "مرحباً بك في المايسترو",
                 28,
                 GOLD,
                 Gravity.CENTER
         );
 
-        title.setTypeface(null, 1);
-        root.addView(title);
+        title.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
 
         root.addView(
-                text(
+                title
+        );
+
+        root.addView(
+                tv(
                         "اختر نوع الحساب للمتابعة",
-                        17,
+                        16,
                         WHITE,
                         Gravity.CENTER
                 ),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
+                lp(
+                        -1,
+                        -2,
+                        6,
                         25
                 )
         );
 
-        LinearLayout student = roleCard(
-                "★",
-                "طالب",
-                "الدخول إلى الامتحانات والنتائج"
-        );
+        LinearLayout student =
+                roleCard(
+                        "★",
+                        "طالب",
+                        "الامتحانات والنتائج ومتابعة المستوى"
+                );
 
         root.addView(
                 student,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                lp(
+                        -1,
+                        -2,
                         5,
                         15
                 )
         );
 
-        LinearLayout teacher = roleCard(
-                "◆",
-                "مدرس",
-                "إدارة الامتحانات والطلاب والنتائج"
-        );
+        LinearLayout teacher =
+                roleCard(
+                        "◆",
+                        "مدرس",
+                        "إدارة الامتحانات والأسئلة والطلاب"
+                );
 
         root.addView(
                 teacher,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                lp(
+                        -1,
+                        -2,
                         5,
                         15
                 )
         );
 
+        student.setOnClickListener(
+                new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        showStudentLogin();
+                    }
+                }
+        );
+
+        teacher.setOnClickListener(
+                new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        showTeacherLogin();
+                    }
+                }
+        );
+
         root.addView(
-                text(
+                tv(
                         "❖  ───── ✦ ─────  ❖",
                         20,
                         GOLD,
@@ -439,661 +608,615 @@ public class MainActivity extends Activity {
                 )
         );
 
-        student.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showStudentLogin();
-            }
-        });
-
-        teacher.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showMessage("قسم المدرس");
-            }
-        });
-
-        setContentView(root);
+        setContentView(
+                scroll(root)
+        );
     }
 
     private LinearLayout roleCard(
-            String iconValue,
-            String titleValue,
-            String descriptionValue
+            String icon,
+            String title,
+            String description
     ) {
 
         LinearLayout card = new LinearLayout(this);
 
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setGravity(Gravity.CENTER);
-        card.setPadding(20, 20, 20, 20);
-        card.setBackground(cardBackground());
+        card.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        card.setGravity(
+                Gravity.CENTER
+        );
+
+        card.setPadding(
+                20,
+                22,
+                20,
+                22
+        );
+
+        card.setBackground(
+                outlinedCard()
+        );
 
         card.addView(
-                text(
-                        iconValue,
+                tv(
+                        icon,
                         30,
                         GOLD,
                         Gravity.CENTER
                 )
         );
 
-        TextView title = text(
-                titleValue,
+        TextView t = tv(
+                title,
                 23,
                 WHITE,
                 Gravity.CENTER
         );
 
-        title.setTypeface(null, 1);
+        t.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
 
-        card.addView(title);
+        card.addView(t);
 
         card.addView(
-                text(
-                        descriptionValue,
+                tv(
+                        description,
                         14,
                         GRAY,
                         Gravity.CENTER
+                ),
+                lp(
+                        -1,
+                        -2,
+                        5,
+                        0
                 )
         );
 
         return card;
     }
 
+    // =========================
+    // دخول الطالب
+    // =========================
+
     private void showStudentLogin() {
 
-        LinearLayout root = new LinearLayout(this);
-
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setGravity(Gravity.CENTER);
-        root.setPadding(24, 25, 24, 25);
-        root.setBackgroundColor(DARK_GREEN);
+        LinearLayout root = baseLayout();
 
         root.addView(
-                decorations(),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
+                ornament(),
+                lp(
+                        -1,
+                        -2,
+                        10,
                         15
                 )
         );
 
-        TextView title = text(
-                "مرحباً يا طالب المايسترو",
-                27,
+        TextView title = tv(
+                "دخول الطالب",
+                29,
                 GOLD,
                 Gravity.CENTER
         );
 
-        title.setTypeface(null, 1);
+        title.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
 
         root.addView(title);
 
         root.addView(
-                text(
-                        "أدخل بياناتك للمتابعة",
-                        17,
+                tv(
+                        "اكتب بياناتك للدخول إلى الامتحان",
+                        16,
                         WHITE,
                         Gravity.CENTER
                 ),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        3,
+                lp(
+                        -1,
+                        -2,
+                        5,
                         20
                 )
         );
 
         LinearLayout card = new LinearLayout(this);
 
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(22, 25, 22, 25);
-        card.setBackground(cardBackground());
+        card.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        card.setPadding(
+                20,
+                25,
+                20,
+                25
+        );
+
+        card.setBackground(
+                outlinedCard()
+        );
 
         card.addView(
-                text(
+                tv(
                         "اسم الطالب",
                         17,
-                        LIGHT_GOLD,
+                        GOLD_LIGHT,
                         Gravity.RIGHT
                 )
         );
 
-        EditText nameInput = inputField(
-                "اكتب اسمك",
-                android.text.InputType.TYPE_CLASS_TEXT
-        );
+        EditText name =
+                input("اكتب اسمك");
 
         card.addView(
-                nameInput,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
+                name,
+                lp(
+                        -1,
                         58,
-                        0,
+                        5,
                         18
                 )
         );
 
         card.addView(
-                text(
+                tv(
                         "كود الامتحان",
                         17,
-                        LIGHT_GOLD,
+                        GOLD_LIGHT,
                         Gravity.RIGHT
                 )
         );
 
-        EditText codeInput = inputField(
-                "اكتب كود الامتحان",
-                android.text.InputType.TYPE_CLASS_TEXT |
-                        android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
-        );
+        EditText code =
+                input("اكتب كود الامتحان");
 
         card.addView(
-                codeInput,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
+                code,
+                lp(
+                        -1,
                         58,
-                        0,
-                        22
+                        5,
+                        20
                 )
         );
 
-        Button loginButton = goldButton("دخول إلى الامتحان");
+        Button login =
+                goldButton(
+                        "دخول إلى الامتحان"
+                );
 
         card.addView(
-                loginButton,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        0,
+                login,
+                lp(
+                        -1,
+                        58,
+                        5,
                         5
                 )
         );
 
         root.addView(
                 card,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                lp(
+                        -1,
+                        -2,
                         5,
-                        18
+                        15
                 )
         );
 
-        Button back = outlineButton("رجوع");
+        Button back =
+                outlineButton("رجوع");
 
         root.addView(
                 back,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                lp(
+                        -1,
+                        55,
                         5,
-                        10
+                        5
                 )
         );
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        login.setOnClickListener(
+                new View.OnClickListener() {
 
-                String name =
-                        nameInput.getText().toString().trim();
+                    @Override
+                    public void onClick(View v) {
 
-                String code =
-                        codeInput.getText().toString().trim();
+                        String n =
+                                name.getText()
+                                        .toString()
+                                        .trim();
 
-                if (name.isEmpty()) {
-                    Toast.makeText(
-                            MainActivity.this,
-                            "اكتب اسم الطالب أولاً",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    return;
+                        String c =
+                                code.getText()
+                                        .toString()
+                                        .trim();
+
+                        if (n.isEmpty()) {
+
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "اكتب اسم الطالب أولاً",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            return;
+                        }
+
+                        if (c.isEmpty()) {
+
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "اكتب كود الامتحان أولاً",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            return;
+                        }
+
+                        studentName = n;
+                        examCode = c;
+
+                        startExam();
+                    }
                 }
+        );
 
-                if (code.isEmpty()) {
-                    Toast.makeText(
-                            MainActivity.this,
-                            "اكتب كود الامتحان أولاً",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    return;
+        back.setOnClickListener(
+                new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        showRoles();
+                    }
                 }
+        );
 
-                studentName = name;
-                examCode = code;
-
-                currentQuestion = 0;
-                score = 0;
-
-                for (int i = 0; i < answers.length; i++) {
-                    answers[i] = -1;
-                }
-
-                showExam();
-            }
-        });
-
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoles();
-            }
-        });
-
-        setContentView(root);
+        setContentView(
+                scroll(root)
+        );
     }
+
+    // =========================
+    // بداية الامتحان
+    // =========================
+
+    private void startExam() {
+
+        currentQuestion = 0;
+        score = 0;
+
+        timeLeft =
+                5 * 60 * 1000;
+
+        for (int i = 0;
+             i < selectedAnswers.length;
+             i++) {
+
+            selectedAnswers[i] = -1;
+        }
+
+        showExam();
+
+        startTimer();
+    }
+
+    // =========================
+    // شاشة الامتحان
+    // =========================
 
     private void showExam() {
 
-        LinearLayout root = new LinearLayout(this);
+        LinearLayout root = baseLayout();
 
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(18, 18, 18, 18);
-        root.setBackgroundColor(DARK_GREEN);
-
-        TextView header = text(
+        TextView title = tv(
                 "امتحان المايسترو",
                 26,
                 GOLD,
                 Gravity.CENTER
         );
 
-        header.setTypeface(null, 1);
+        title.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
 
         root.addView(
-                header,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                title,
+                lp(
+                        -1,
+                        -2,
                         5,
                         5
                 )
         );
 
-        TextView student = text(
-                "الطالب: " + studentName,
-                15,
-                LIGHT_GOLD,
-                Gravity.RIGHT
+        root.addView(
+                tv(
+                        "الطالب: " + studentName,
+                        15,
+                        GOLD_LIGHT,
+                        Gravity.RIGHT
+                ),
+                lp(
+                        -1,
+                        -2,
+                        2,
+                        5
+                )
         );
 
         root.addView(
-                student,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                tv(
+                        "كود الامتحان: " + examCode,
+                        13,
+                        GRAY,
+                        Gravity.RIGHT
+                ),
+                lp(
+                        -1,
+                        -2,
                         2,
                         8
                 )
         );
 
-        TextView counter = text(
-                "السؤال " + (currentQuestion + 1)
-                        + " من " + questions.length,
-                17,
+        timerView = tv(
+                "05:00",
+                20,
+                GOLD,
+                Gravity.CENTER
+        );
+
+        timerView.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
+
+        root.addView(
+                timerView,
+                lp(
+                        -1,
+                        45,
+                        5,
+                        8
+                )
+        );
+
+        TextView counter = tv(
+                "السؤال "
+                        + (currentQuestion + 1)
+                        + " من "
+                        + questions.length,
+                16,
                 WHITE,
                 Gravity.CENTER
         );
 
-        counter.setTypeface(null, 1);
-
-              root.addView(
+        root.addView(
                 counter,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
+                lp(
+                        -1,
+                        -2,
+                        3,
                         12
                 )
         );
 
-        LinearLayout questionCard = new LinearLayout(this);
+        LinearLayout card =
+                new LinearLayout(this);
 
-        questionCard.setOrientation(LinearLayout.VERTICAL);
-        questionCard.setPadding(20, 22, 20, 20);
-        questionCard.setBackground(cardBackground());
-
-        TextView questionText = text(
-                questions[currentQuestion],
-                21,
-                WHITE,
-                Gravity.RIGHT
+        card.setOrientation(
+                LinearLayout.VERTICAL
         );
 
-        questionText.setTypeface(null, 1);
+        card.setPadding(
+                20,
+                22,
+                20,
+                22
+        );
 
-        questionCard.addView(
-                questionText,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+        card.setBackground(
+                outlinedCard()
+        );
+
+        TextView q =
+                tv(
+                        questions[currentQuestion],
+                        20,
+                        WHITE,
+                        Gravity.RIGHT
+                );
+
+        q.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
+
+        card.addView(
+                q,
+                lp(
+                        -1,
+                        -2,
                         0,
-                        15
+                        18
                 )
         );
 
-        RadioGroup group = new RadioGroup(this);
-        group.setOrientation(RadioGroup.VERTICAL);
-        group.setGravity(Gravity.RIGHT);
+        RadioGroup group =
+                new RadioGroup(this);
 
-        for (int i = 0; i < choices[currentQuestion].length; i++) {
+        group.setOrientation(
+                RadioGroup.VERTICAL
+        );
 
-            RadioButton radio = new RadioButton(this);
+        for (int i = 0;
+             i < choices[currentQuestion].length;
+             i++) {
 
-            radio.setId(View.generateViewId());
-            radio.setText(choices[currentQuestion][i]);
-            radio.setTextSize(17);
-            radio.setTextColor(WHITE);
-            radio.setGravity(
-                    Gravity.RIGHT | Gravity.CENTER_VERTICAL
+            RadioButton radio =
+                    new RadioButton(this);
+
+            radio.setId(
+                    View.generateViewId()
             );
 
+            radio.setText(
+                    choices[currentQuestion][i]
+            );
+
+            radio.setTextSize(17);
+            radio.setTextColor(WHITE);
+
             radio.setButtonTintList(
-                    android.content.res.ColorStateList.valueOf(GOLD)
+                    ColorStateList.valueOf(GOLD)
+            );
+
+            radio.setGravity(
+                    Gravity.RIGHT |
+                            Gravity.CENTER_VERTICAL
             );
 
             group.addView(
                     radio,
-                    params(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            5,
-                            5
+                    lp(
+                            -1,
+                            50,
+                            3,
+                            3
                     )
             );
         }
 
-        questionCard.addView(group);
+        card.addView(group);
 
         root.addView(
-                questionCard,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                card,
+                lp(
+                        -1,
+                        -2,
                         5,
                         15
                 )
         );
 
-        Button next = goldButton(
-                currentQuestion == questions.length - 1
-                        ? "تسليم الامتحان"
-                        : "السؤال التالي"
-        );
+        Button next =
+                goldButton(
+                        currentQuestion ==
+                                questions.length - 1
+                                ? "تسليم الامتحان"
+                                : "السؤال التالي"
+                );
 
         root.addView(
                 next,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                lp(
+                        -1,
+                        58,
                         5,
                         8
                 )
         );
 
-        Button exit = outlineButton("خروج من الامتحان");
+        Button exit =
+                outlineButton(
+                        "خروج من الامتحان"
+                );
 
         root.addView(
                 exit,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                lp(
+                        -1,
+                        52,
                         5,
                         5
                 )
         );
 
-        next.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        next.setOnClickListener(
+                new View.OnClickListener() {
 
-                int selected = -1;
+                    @Override
+                    public void onClick(View v) {
 
-                for (int i = 0; i < group.getChildCount(); i++) {
+                        int selected = -1;
 
-                    RadioButton radio =
-                            (RadioButton) group.getChildAt(i);
+                        for (int i = 0;
+                             i < group.getChildCount();
+                             i++) {
 
-                    if (radio.isChecked()) {
-                        selected = i;
-                        break;
+                            RadioButton r =
+                                    (RadioButton)
+                                            group.getChildAt(i);
+
+                            if (r.isChecked()) {
+
+                                selected = i;
+                                break;
+                            }
+                        }
+
+                        if (selected == -1) {
+
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "اختار إجابة أولاً",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            return;
+                        }
+
+                        selectedAnswers[currentQuestion] =
+                                selected;
+
+                        if (currentQuestion ==
+                                questions.length - 1) {
+
+                            finishExam();
+
+                        } else {
+
+                            currentQuestion++;
+
+                            showExam();
+                        }
                     }
                 }
+        );
 
-                if (selected == -1) {
+        exit.setOnClickListener(
+                new View.OnClickListener() {
 
-                    Toast.makeText(
-                            MainActivity.this,
-                            "اختار إجابة أولاً",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                    @Override
+                    public void onClick(View v) {
 
-                    return;
+                        if (examTimer != null) {
+                            examTimer.cancel();
+                            examTimer = null;
+                        }
+
+                        showStudentLogin();
+                    }
                 }
+        );
 
-                answers[currentQuestion] = selected;
-
-                if (currentQuestion == questions.length - 1) {
-
-                    calculateResult();
-
-                } else {
-
-                    currentQuestion++;
-                    showExam();
-                }
-            }
-        });
-
-        exit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showStudentLogin();
-            }
-        });
-
-        setContentView(root);
+        setContentView(
+                scroll(root)
+        );
     }
 
-    private void calculateResult() {
-
-        score = 0;
-
-        for (int i = 0; i < questions.length; i++) {
-
-            if (answers[i] == correctAnswers[i]) {
-                score++;
-            }
-        }
-
-        showResult();
-    }
-
-    private void showResult() {
-
-        LinearLayout root = new LinearLayout(this);
-
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setGravity(Gravity.CENTER);
-        root.setPadding(25, 25, 25, 25);
-        root.setBackgroundColor(DARK_GREEN);
-
-        root.addView(
-                decorations(),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
-                        20
-                )
-        );
-
-        TextView title = text(
-                "نتيجة الامتحان",
-                30,
-                GOLD,
-                Gravity.CENTER
-        );
-
-        title.setTypeface(null, 1);
-
-        root.addView(title);
-
-        root.addView(
-                text(
-                        "الطالب: " + studentName,
-                        18,
-                        WHITE,
-                        Gravity.CENTER
-                ),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        15,
-                        8
-                )
-        );
-
-        LinearLayout resultCard = new LinearLayout(this);
-
-        resultCard.setOrientation(LinearLayout.VERTICAL);
-        resultCard.setGravity(Gravity.CENTER);
-        resultCard.setPadding(25, 30, 25, 30);
-        resultCard.setBackground(cardBackground());
-
-        TextView scoreText = text(
-                score + " / " + questions.length,
-                42,
-                GOLD,
-                Gravity.CENTER
-        );
-
-        scoreText.setTypeface(null, 1);
-
-        resultCard.addView(scoreText);
-
-        resultCard.addView(
-                text(
-                        "عدد الإجابات الصحيحة",
-                        18,
-                        WHITE,
-                        Gravity.CENTER
-                )
-        );
-
-        int wrong = questions.length - score;
-
-        resultCard.addView(
-                text(
-                        "الصحيح: " + score
-                                + "   |   الخطأ: " + wrong,
-                        16,
-                        LIGHT_GOLD,
-                        Gravity.CENTER
-                ),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        15,
-                        0
-                )
-        );
-
-        root.addView(
-                resultCard,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        20,
-                        20
-                )
-        );
-
-        Button again = goldButton(
-                "العودة لتسجيل الدخول"
-        );
-
-        root.addView(
-                again,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
-                        10
-                )
-        );
-
-        again.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showStudentLogin();
-            }
-        });
-
-        setContentView(root);
-    }
-
-    private void showMessage(String message) {
-
-        LinearLayout root = new LinearLayout(this);
-
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setGravity(Gravity.CENTER);
-        root.setPadding(30, 30, 30, 30);
-        root.setBackgroundColor(DARK_GREEN);
-
-        root.addView(
-                decorations(),
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
-                        25
-                )
-        );
-
-        TextView title = text(
-                message,
-                24,
-                GOLD,
-                Gravity.CENTER
-        );
-
-        title.setTypeface(null, 1);
-
-        root.addView(
-                title,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
-                        20
-                )
-        );
-
-        Button back = outlineButton("رجوع");
-
-        root.addView(
-                back,
-                params(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        5,
-                        5
-                )
-        );
-
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoles();
-            }
-        });
-
-        setContentView(root);
-    }
-            }
+    // =========================
+    // المؤقت
