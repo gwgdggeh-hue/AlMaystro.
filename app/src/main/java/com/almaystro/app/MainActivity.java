@@ -2530,204 +2530,537 @@ public class MainActivity extends Activity {
 
                                     exam.put(
                                             "duration",
-                                            Math.m
-ax(1, minutes)
-);
-                
-                exam.put(
-                        "code",
-                        code
-                );
+                                            Math.max(
+                                                    1,
+                                                    minutes
+                                            )
+                                    );
 
-                exam.put(
-                        "questionsData",
-                        "[]"
-                );
+                                    exam.put(
+                                            "code",
+                                            c
+                                    );
 
-                exam.put(
-                        "createdAt",
-                        System.currentTimeMillis()
-                );
+                                    exam.put(
+                                            "teacher",
+                                            currentTeacher
+                                    );
 
-                JSONArray exams =
-                        getExams();
+                                    exam.put(
+                                            "questions",
+                                            new JSONArray()
+                                    );
 
-                exams.put(
-                        exam
-                );
+                                    appendArray(
+                                            "exams",
+                                            exam
+                                    );
 
-                saveExams(
-                        exams
-                );
+                                } catch (
+                                        Exception ignored
+                                ) {
+                                }
 
-                dialog.dismiss();
+                                dialog.dismiss();
 
-                toast(
-                        "تم إنشاء الامتحان بنجاح"
-                );
+                                toast(
+                                        "تم إنشاء الامتحان"
+                                );
 
-                teacherExams();
-
-            } catch (Exception e) {
-
-                toast(
-                        "حدث خطأ أثناء حفظ الامتحان"
-                );
-            }
-        });
-
-        buttons.addView(
-                save,
-                new LinearLayout.LayoutParams(
-                        0,
-                        dp(55),
-                        1f
-                )
+                                teacherExams();
+                            }
+                    );
+                }
         );
-
-        Button cancel =
-                secondaryButton(
-                        "إلغاء"
-                );
-
-        cancel.setOnClickListener(
-                v -> dialog.dismiss()
-        );
-
-        buttons.addView(
-                cancel,
-                new LinearLayout.LayoutParams(
-                        0,
-                        dp(55),
-                        1f
-                )
-        );
-
-        box.addView(
-                buttons,
-                marginParams(
-                        -1,
-                        dp(60),
-                        5,
-                        15,
-                        5,
-                        5
-                )
-        );
-
-        dialog.setContentView(
-                box
-        );
-
-        Window window =
-                dialog.getWindow();
-
-        if (window != null) {
-
-            window.setBackgroundDrawableResource(
-                    android.R.color.transparent
-            );
-
-            window.setLayout(
-                    (int) (
-                            getResources()
-                                    .getDisplayMetrics()
-                                    .widthPixels * 0.92
-                    ),
-                    WindowManager.LayoutParams.WRAP_CONTENT
-            );
-        }
 
         dialog.show();
-
-        if (dialog.getWindow() != null) {
-
-            dialog.getWindow().setLayout(
-                    (int) (
-                            getResources()
-                                    .getDisplayMetrics()
-                                    .widthPixels * 0.92
-                    ),
-                    WindowManager.LayoutParams.WRAP_CONTENT
-            );
-        }
     }
 
-    // =========================================================
-    // إدارة أسئلة الامتحانات
-    // =========================================================
+    private void deleteExam(
+            String id
+    ) {
+
+        new AlertDialog.Builder(this)
+                .setTitle(
+                        "حذف الامتحان"
+                )
+                .setMessage(
+                        "هل تريد حذف هذا الامتحان؟"
+                )
+                .setNegativeButton(
+                        "إلغاء",
+                        null
+                )
+                .setPositiveButton(
+                        "حذف",
+                        (d, w) -> {
+
+                            JSONArray exams =
+                                    readArray(
+                                            "exams"
+                                    );
+
+                            JSONArray result =
+                                    new JSONArray();
+
+                            for (
+                                    int i = 0;
+                                    i < exams.length();
+                                    i++
+                            ) {
+
+                                JSONObject e =
+                                        exams.optJSONObject(
+                                                i
+                                        );
+
+                                if (e == null) continue;
+
+                                if (
+                                        !e.optString(
+                                                "id"
+                                        ).equals(id)
+                                ) {
+
+                                    result.put(e);
+                                }
+                            }
+
+                            saveArray(
+                                    "exams",
+                                    result
+                            );
+
+                            teacherExams();
+                        }
+                )
+                .show();
+    }
+
+    /* =========================================================
+       QUESTIONS
+       ========================================================= */
+
+    private void addQuestion(
+            String examId
+    ) {
+
+        JSONObject exam =
+                findExamById(
+                        examId
+                );
+
+        if (exam == null) return;
+
+        LinearLayout box =
+                new LinearLayout(this);
+
+        box.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        EditText question =
+                input(
+                        "نص السؤال"
+                );
+
+        box.addView(question);
+
+        EditText a =
+                input(
+                        "الإجابة أ"
+                );
+
+        EditText b =
+                input(
+                        "الإجابة ب"
+                );
+
+        EditText c =
+                input(
+                        "الإجابة ج"
+                );
+
+        EditText d =
+                input(
+                        "الإجابة د"
+                );
+
+        EditText correct =
+                input(
+                        "رقم الإجابة الصحيحة: 1 أو 2 أو 3 أو 4"
+                );
+
+        EditText explanation =
+                input(
+                        "شرح الإجابة - اختياري"
+                );
+
+        box.addView(a);
+        box.addView(b);
+        box.addView(c);
+        box.addView(d);
+        box.addView(correct);
+        box.addView(explanation);
+
+        ScrollView scroll =
+                new ScrollView(this);
+
+        scroll.addView(box);
+
+        AlertDialog dialog =
+                new AlertDialog.Builder(this)
+                        .setTitle(
+                                "إضافة سؤال"
+                        )
+                        .setView(scroll)
+                        .setNegativeButton(
+                                "إلغاء",
+                                null
+                        )
+                        .setPositiveButton(
+                                "إضافة",
+                                null
+                        )
+                        .create();
+
+        dialog.setOnShowListener(
+                x -> {
+
+                    dialog.getButton(
+                            AlertDialog.BUTTON_POSITIVE
+                    ).setOnClickListener(
+                            v -> {
+
+                                String q =
+                                        question
+                                                .getText()
+                                                .toString()
+                                                .trim();
+
+                                if (q.isEmpty()) {
+
+                                    question.setError(
+                                            "اكتب السؤال"
+                                    );
+
+                                    return;
+                                }
+
+                                int answer;
+
+                                try {
+
+                                    answer =
+                                            Integer.parseInt(
+                                                    correct
+                                                            .getText()
+                                                            .toString()
+                                                            .trim()
+                                            ) - 1;
+
+                                } catch (
+                                        Exception e
+                                ) {
+
+                                    correct.setError(
+                                            "اكتب رقم من 1 إلى 4"
+                                    );
+
+                                    return;
+                                }
+
+                                if (
+                                        answer < 0
+                                        ||
+                                        answer > 3
+                                ) {
+
+                                    correct.setError(
+                                            "رقم الإجابة من 1 إلى 4"
+                                    );
+
+                                    return;
+                                }
+
+                                JSONObject item =
+                                        new JSONObject();
+
+                                try {
+
+                                    item.put(
+                                            "id",
+                                            UUID.randomUUID()
+                                                    .toString()
+                                    );
+
+                                    item.put(
+                                            "question",
+                                            q
+                                    );
+
+                                    item.put(
+                                            "o0",
+                                            a.getText()
+                                                    .toString()
+                                    );
+
+                                    item.put(
+                                            "o1",
+                                            b.getText()
+                                                    .toString()
+                                    );
+
+                                    item.put(
+                                            "o2",
+                                            c.getText()
+                                                    .toString()
+                                    );
+
+                                    item.put(
+                                            "o3",
+                                            d.getText()
+                                                    .toString()
+                                    );
+
+                                    item.put(
+                                            "correct",
+                                            answer
+                                    );
+
+                                    item.put(
+                                            "explanation",
+                                            explanation
+                                                    .getText()
+                                                    .toString()
+                                    );
+
+                                } catch (
+                                        Exception ignored
+                                ) {
+                                }
+
+                                JSONArray questions =
+                                        exam.optJSONArray(
+                                                "questions"
+                                        );
+
+                                if (questions == null) {
+                                    questions =
+                                            new JSONArray();
+                                }
+
+                                questions.put(item);
+
+                                updateExamQuestions(
+                                        examId,
+                                        questions
+                                );
+
+                                dialog.dismiss();
+
+                                toast(
+                                        "تمت إضافة السؤال"
+                                );
+
+                                teacherExams();
+                            }
+                    );
+                }
+        );
+
+        dialog.show();
+    }
+
+    private void updateExamQuestions(
+            String examId,
+            JSONArray questions
+    ) {
+
+        JSONArray exams =
+                readArray(
+                        "exams"
+                );
+
+        JSONArray output =
+                new JSONArray();
+
+        for (
+                int i = 0;
+                i < exams.length();
+                i++
+        ) {
+
+            JSONObject e =
+                    exams.optJSONObject(i);
+
+            if (e == null) continue;
+
+            if (
+                    e.optString("id")
+                            .equals(examId)
+            ) {
+
+                try {
+                    e.put(
+                            "questions",
+                            questions
+                    );
+                } catch (Exception ignored) {
+                }
+            }
+
+            output.put(e);
+        }
+
+        saveArray(
+                "exams",
+                output
+        );
+    }
 
     private void teacherQuestions() {
 
-        createBaseLayout(
-                false
-        );
-
-        addDecoration();
-
-        TextView title =
-                text(
-                        "إدارة الأسئلة",
-                        28,
-                        GOLD,
-                        true
+        LinearLayout page =
+                pageBase(
+                        "بنك الأسئلة",
+                        "كل الأسئلة التي أنشأها المدرس"
                 );
-
-        title.setGravity(
-                Gravity.CENTER
-        );
-
-        content.addView(
-                title,
-                marginParams(
-                        -1,
-                        -2,
-                        15,
-                        10,
-                        15,
-                        5
-                )
-        );
-
-        TextView description =
-                text(
-                        "المدرس هو المسؤول عن إضافة الأسئلة والإجابات الصحيحة والشرح",
-                        16,
-                        foregroundSecondary(),
-                        false
-                );
-
-        description.setGravity(
-                Gravity.CENTER
-        );
-
-        description.setLineSpacing(
-                dp(3),
-                1.05f
-        );
-
-        content.addView(
-                description,
-                marginParams(
-                        -1,
-                        -2,
-                        15,
-                        5,
-                        15,
-                        15
-                )
-        );
 
         JSONArray exams =
-                getExams();
+                readArray("exams");
 
-        if (
-                exams.length() == 0
+        boolean found = false;
+
+        for (
+                int i = 0;
+                i < exams.length();
+                i++
         ) {
 
-            emptyBox(
-                    "لا توجد امتحانات حتى الآن",
-                    "أضف امتحانًا أولًا من قسم الامتحانات"
+            JSONObject exam =
+                    exams.optJSONObject(i);
+
+            if (exam == null) continue;
+
+            JSONArray qs =
+                    exam.optJSONArray(
+                            "questions"
+                    );
+
+            if (
+                    qs == null
+                    ||
+                    qs.length() == 0
+            ) continue;
+
+            found = true;
+
+            page.addView(
+                    text(
+                            "📝 " +
+                            exam.optString(
+                                    "title"
+                            ),
+                            17,
+                            GOLD,
+                            true
+                    ),
+                    lp(-1, -2, 0, 8, 0, 5)
+            );
+
+            for (
+                    int j = 0;
+                    j < qs.length();
+                    j++
+            ) {
+
+                JSONObject q =
+                        qs.optJSONObject(j);
+
+                if (q == null) continue;
+
+                LinearLayout card =
+                        panel();
+
+                card.addView(
+                        text(
+                                (j + 1) +
+                                ". " +
+                                q.optString(
+                                        "question"
+                                ),
+                                14,
+                                textColor(),
+                                true
+                        )
+                );
+
+                card.addView(
+                        text(
+                                "الإجابة الصحيحة: " +
+                                q.optString(
+                                        "o" +
+                                        q.optInt(
+                                                "correct",
+                                                0
+                                        )
+                                ),
+                                12,
+                                GREEN,
+                                false
+                        )
+                );
+
+                page.addView(
+                        card,
+                        lp(-1, -2, 0, 0, 0, 7)
+                );
+            }
+        }
+
+        if (!found) {
+
+            page.addView(
+                    emptyCard(
+                            "لا توجد أسئلة حتى الآن.\n" +
+                            "أنشئ امتحاناً ثم أضف الأسئلة."
+                    )
+            );
+        }
+
+        addBack(
+                page,
+                this::showTeacherHome
+        );
+
+        setPage(
+                page,
+                true
+        );
+    }
+
+    /* =========================================================
+       CODES
+       ========================================================= */
+
+    private void teacherCodes() {
+
+        LinearLayout page =
+                pageBase(
+                        "أكواد الامتحانات",
+                        "إدارة أكواد دخول الطلاب"
+                );
+
+        JSONArray exams =
+                readArray("exams");
+
+        if (exams.length() == 0) {
+
+            page.addView(
+                    emptyCard(
+                            "لا توجد امتحانات أو أكواد."
+                    )
             );
 
         } else {
@@ -2738,1103 +3071,1658 @@ ax(1, minutes)
                     i++
             ) {
 
-                try {
-
-                    JSONObject exam =
-                            exams.getJSONObject(i);
-
-                    String id =
-                            exam.optString(
-                                    "id",
-                                    ""
-                            );
-
-                    String name =
-                            exam.optString(
-                                    "title",
-                                    exam.optString(
-                                            "name",
-                                            "بدون اسم"
-                                    )
-                            );
-
-                    JSONArray questions =
-                            new JSONArray(
-                                    exam.optString(
-                                            "questionsData",
-                                            "[]"
-                                    )
-                            );
-
-                    LinearLayout card =
-                            createCard();
-
-                    TextView examTitle =
-                            text(
-                                    "📚 " + name,
-                                    19,
-                                    GOLD,
-                                    true
-                            );
-
-                    examTitle.setGravity(
-                            Gravity.RIGHT
-                    );
-
-                    card.addView(
-                            examTitle,
-                            marginParams(
-                                    -1,
-                                    -2,
-                                    8,
-                                    3,
-                                    8,
-                                    5
-                            )
-                    );
-
-                    TextView count =
-                            text(
-                                    "عدد الأسئلة: "
-                                            + questions.length(),
-                                    15,
-                                    foregroundSecondary(),
-                                    false
-                            );
-
-                    count.setGravity(
-                            Gravity.RIGHT
-                    );
-
-                    card.addView(
-                            count,
-                            marginParams(
-                                    -1,
-                                    -2,
-                                    8,
-                                    0,
-                                    8,
-                                    8
-                            )
-                    );
-
-                    Button addQuestion =
-                            mainButton(
-                                    "➕ إضافة سؤال"
-                            );
-
-                    addQuestion.setOnClickListener(
-                            v ->
-                                    addQuestionDialog(
-                                            id
-                                    )
-                    );
-
-                    card.addView(
-                            addQuestion,
-                            marginParams(
-                                    -1,
-                                    dp(52),
-                                    5,
-                                    5,
-                                    5,
-                                    5
-                            )
-                    );
-
-                    Button viewQuestions =
-                            secondaryButton(
-                                    "📖 عرض أسئلة الامتحان"
-                            );
-
-                    viewQuestions.setOnClickListener(
-                            v ->
-                                    showExamQuestions(
-                                            id
-                                    )
-                    );
-
-                    card.addView(
-                            viewQuestions,
-                            marginParams(
-                                    -1,
-                                    dp(52),
-                                    5,
-                                    5,
-                                    5,
-                                    5
-                            )
-                    );
-
-                    content.addView(
-                            card,
-                            marginParams(
-                                    -1,
-                                    -2,
-                                    12,
-                                    7,
-                                    12,
-                                    7
-                            )
-                    );
-
-                } catch (Exception ignored) {
-                }
-            }
-        }
-
-        Button back =
-                secondaryButton(
-                        "رجوع للوحة المدرس"
-                );
-
-        back.setOnClickListener(
-                v ->
-                        teacherHome()
-        );
-
-        content.addView(
-                back,
-                marginParams(
-                        -1,
-                        dp(52),
-                        20,
-                        15,
-                        20,
-                        15
-                )
-        );
-
-        addDecorationBottom();
-    }
-
-    // =========================================================
-    // إضافة سؤال
-    // =========================================================
-
-    private void addQuestionDialog(
-            String examId
-    ) {
-
-        AlertDialog dialog =
-                new AlertDialog.Builder(
-                        this
-                )
-                        .create();
-
-        LinearLayout box =
-                dialogBox();
-
-        TextView title =
-                text(
-                        "إضافة سؤال جديد",
-                        22,
-                        GOLD,
-                        true
-                );
-
-        title.setGravity(
-                Gravity.CENTER
-        );
-
-        box.addView(
-                title,
-                marginParams(
-                        -1,
-                        -2,
-                        5,
-                        5,
-                        5,
-                        15
-                )
-        );
-
-        EditText question =
-                input(
-                        "اكتب نص السؤال"
-                );
-
-        question.setMinHeight(
-                dp(90)
-        );
-
-        question.setGravity(
-                Gravity.TOP |
-                        Gravity.RIGHT
-        );
-
-        box.addView(
-                question,
-                marginParams(
-                        -1,
-                        dp(95),
-                        5,
-                        5,
-                        5,
-                        10
-                )
-        );
-
-        EditText option1 =
-                input(
-                        "الإجابة الأولى"
-                );
-
-        EditText option2 =
-                input(
-                        "الإجابة الثانية"
-                );
-
-        EditText option3 =
-                input(
-                        "الإجابة الثالثة"
-                );
-
-        EditText option4 =
-                input(
-                        "الإجابة الرابعة"
-                );
-
-        box.addView(
-                option1,
-                marginParams(
-                        -1,
-                        dp(55),
-                        5,
-                        4,
-                        5,
-                        4
-                )
-        );
-
-        box.addView(
-                option2,
-                marginParams(
-                        -1,
-                        dp(55),
-                        5,
-                        4,
-                        5,
-                        4
-                )
-        );
-
-        box.addView(
-                option3,
-                marginParams(
-                        -1,
-                        dp(55),
-                        5,
-                        4,
-                        5,
-                        4
-                )
-        );
-
-        box.addView(
-                option4,
-                marginParams(
-                        -1,
-                        dp(55),
-                        5,
-                        4,
-                        5,
-                        10
-                )
-        );
-
-        TextView correctLabel =
-                text(
-                        "حدد رقم الإجابة الصحيحة",
-                        16,
-                        GOLD,
-                        true
-                );
-
-        correctLabel.setGravity(
-                Gravity.RIGHT
-        );
-
-        box.addView(
-                correctLabel,
-                marginParams(
-                        -1,
-                        -2,
-                        5,
-                        5,
-                        5,
-                        5
-                )
-        );
-
-        RadioGroup correctGroup =
-                new RadioGroup(
-                        this
-                );
-
-        correctGroup.setOrientation(
-                RadioGroup.HORIZONTAL
-        );
-
-        correctGroup.setGravity(
-                Gravity.CENTER
-        );
-
-        for (
-                int i = 0;
-                i < 4;
-                i++
-        ) {
-
-            RadioButton rb =
-                    new RadioButton(
-                            this
-                    );
-
-            rb.setText(
-                    String.valueOf(
-                            i + 1
-                    )
-            );
-
-            rb.setTextSize(
-                    16
-            );
-
-            rb.setTextColor(
-                    foreground()
-            );
-
-            rb.setPadding(
-                    dp(8),
-                    dp(5),
-                    dp(8),
-                    dp(5)
-            );
-
-            correctGroup.addView(
-                    rb,
-                    new RadioGroup.LayoutParams(
-                            0,
-                            dp(50),
-                            1f
-                    )
-            );
-        }
-
-        box.addView(
-                correctGroup,
-                marginParams(
-                        -1,
-                        dp(55),
-                        5,
-                        0,
-                        5,
-                        10
-                )
-        );
-
-        EditText explanation =
-                input(
-                        "شرح الإجابة وتصحيح الخطأ - اختياري"
-                );
-
-        explanation.setMinHeight(
-                dp(80)
-        );
-
-        explanation.setGravity(
-                Gravity.TOP |
-                        Gravity.RIGHT
-        );
-
-        box.addView(
-                explanation,
-                marginParams(
-                        -1,
-                        dp(85),
-                        5,
-                        5,
-                        5,
-                        12
-                )
-        );
-
-        LinearLayout buttons =
-                new LinearLayout(
-                        this
-                );
-
-        buttons.setOrientation(
-                LinearLayout.HORIZONTAL
-        );
-
-        Button save =
-                mainButton(
-                        "حفظ السؤال"
-                );
-
-        save.setOnClickListener(
-                v -> {
-
-                    String q =
-                            question
-                                    .getText()
-                                    .toString()
-                                    .trim();
-
-                    if (
-                            q.isEmpty()
-                    ) {
-
-                        toast(
-                                "اكتب نص السؤال"
-                        );
-
-                        return;
-                    }
-
-                    String[] options =
-                            new String[]{
-                                    option1.getText().toString().trim(),
-                                    option2.getText().toString().trim(),
-                                    option3.getText().toString().trim(),
-                                    option4.getText().toString().trim()
-                            };
-
-                    for (
-                            String option :
-                            options
-                    ) {
-
-                        if (
-                                option.isEmpty()
-                        ) {
-
-                            toast(
-                                    "اكتب الاختيارات الأربعة"
-                            );
-
-                            return;
-                        }
-                    }
-
-                    int checkedId =
-                            correctGroup
-                                    .getCheckedRadioButtonId();
-
-                    if (
-                            checkedId ==
-                                    -1
-                    ) {
-
-                        toast(
-                                "حدد الإجابة الصحيحة"
-                        );
-
-                        return;
-                    }
-
-                    int correctIndex =
-                            correctGroup
-                                    .indexOfChild(
-                                            correctGroup
-                                                    .findViewById(
-                                                            checkedId
-                                                    )
-                                    );
-
-                    JSONObject newQuestion =
-                            new JSONObject();
-
-                    try {
-
-                        newQuestion.put(
-                                "id",
-                                java.util.UUID
-                                        .randomUUID()
-                                        .toString()
-                        );
-
-                        newQuestion.put(
-                                "question",
-                                q
-                        );
-
-                        JSONArray optionsArray =
-                                new JSONArray();
-
-                        for (
-                                String option :
-                                options
-                        ) {
-
-                            optionsArray.put(
-                                    option
-                            );
-                        }
-
-                        newQuestion.put(
-                                "options",
-                                optionsArray
-                        );
-
-                        newQuestion.put(
-                                "correctAnswer",
-                                correctIndex
-                        );
-
-                        newQuestion.put(
-                                "explanation",
-                                explanation
-                                        .getText()
-                                        .toString()
-                                        .trim()
-                        );
-
-                        updateExamQuestions(
-                                examId,
-                                newQuestion
-                        );
-
-                        dialog.dismiss();
-
-                        toast(
-                                "تم حفظ السؤال بنجاح"
-                        );
-
-                        teacherQuestions();
-
-                    } catch (Exception e) {
-
-                        toast(
-                                "تعذر حفظ السؤال"
-                        );
-                    }
-                }
-        );
-
-        buttons.addView(
-                save,
-                new LinearLayout.LayoutParams(
-                        0,
-                        dp(55),
-                        1f
-                )
-        );
-
-        Button cancel =
-                secondaryButton(
-                        "إلغاء"
-                );
-
-        cancel.setOnClickListener(
-                v ->
-                        dialog.dismiss()
-        );
-
-        buttons.addView(
-                cancel,
-                new LinearLayout.LayoutParams(
-                        0,
-                        dp(55),
-                        1f
-                )
-        );
-
-        box.addView(
-                buttons,
-                marginParams(
-                        -1,
-                        dp(60),
-                        5,
-                        5,
-                        5,
-                        5
-                )
-        );
-
-        dialog.setView(
-                box
-        );
-
-        dialog.show();
-
-        if (
-                dialog.getWindow() != null
-        ) {
-
-            dialog.getWindow()
-                    .setBackgroundDrawableResource(
-                            android.R.color.transparent
-                    );
-
-            dialog.getWindow()
-                    .setLayout(
-                            (int)(
-                                    getResources()
-                                            .getDisplayMetrics()
-                                            .widthPixels
-                                            * 0.94
-                            ),
-                            WindowManager.LayoutParams.WRAP_CONTENT
-                    );
-        }
-    }
-
-    // =========================================================
-    // تحديث أسئلة الامتحان
-    // =========================================================
-
-    private void updateExamQuestions(
-            String examId,
-            JSONObject question
-    ) {
-
-        JSONArray exams =
-                getExams();
-
-        for (
-                int i = 0;
-                i < exams.length();
-                i++
-        ) {
-
-            try {
-
-                JSONObject exam =
-                        exams.getJSONObject(i);
-
-                if (
-                        exam.optString(
-                                "id",
-                                ""
-                        ).equals(
-                                examId
+                JSONObject e =
+                        exams.optJSONObject(i);
+
+                if (e == null) continue;
+
+                page.addView(
+                        messageCard(
+                                "الامتحان: " +
+                                e.optString("title") +
+                                "\nالكود: " +
+                                e.optString(
+                                        "code",
+                                        ""
+                                )
                         )
-                ) {
-
-                    JSONArray questions;
-
-                    try {
-
-                        questions =
-                                new JSONArray(
-                                        exam.optString(
-                                                "questionsData",
-                                                "[]"
-                                        )
-                                );
-
-                    } catch (Exception e) {
-
-                        questions =
-                                new JSONArray();
-                    }
-
-                    questions.put(
-                            question
-                    );
-
-                    exam.put(
-                            "questionsData",
-                            questions.toString()
-                    );
-
-                    exams.put(
-                            i,
-                            exam
-                    );
-
-                    saveExams(
-                            exams
-                    );
-
-                    return;
-                }
-
-            } catch (Exception ignored) {
+                );
             }
         }
+
+        addBack(
+                page,
+                this::showTeacherHome
+        );
+
+        setPage(
+                page,
+                true
+        );
     }
 
-    // =========================================================
-    // عرض أسئلة امتحان معين
-    // =========================================================
+    /* =========================================================
+       TEACHER RESULTS
+       ========================================================= */
 
-    private void showExamQuestions(
-            String examId
-    ) {
+    private void teacherResults() {
 
-        createBaseLayout(
-                false
-        );
-
-        addDecoration();
-
-        JSONObject exam =
-                findExamById(
-                        examId
+        LinearLayout page =
+                pageBase(
+                        "نتائج الطلاب",
+                        "كل النتائج المحفوظة على الجهاز"
                 );
 
-        if (
-                exam == null
-        ) {
+        JSONArray results =
+                readArray("results");
 
-            toast(
-                    "الامتحان غير موجود"
+        if (results.length() == 0) {
+
+            page.addView(
+                    emptyCard(
+                            "لا توجد نتائج حتى الآن."
+                    )
             );
 
-            teacherQuestions();
+        } else {
 
-            return;
-        }
+            for (
+                    int i = results.length() - 1;
+                    i >= 0;
+                    i--
+            ) {
 
-        TextView title =
-                text(
-                        exam.optString(
-                                "title",
-                                "أسئلة الامتحان"
-                        ),
-                        25,
-                        GOLD,
-                        true
+                JSONObject r =
+                        results.optJSONObject(i);
+
+                if (r == null) continue;
+
+                LinearLayout card =
+                        panel();
+
+                card.addView(
+                        text(
+                                "👨‍🎓 " +
+                                r.optString(
+                                        "student"
+                                ),
+                                16,
+                                textColor(),
+                                true
+                        )
                 );
 
-        title.setGravity(
-                Gravity.CENTER
-        );
+                card.addView(
+                        text(
+                                "الامتحان: " +
+                                r.optString(
+                                        "exam"
+                                ),
+                                13,
+                                GRAY,
+                                false
+                        )
+                );
 
-        content.addView(
-                title,
-                marginParams(
-                        -1,
-                        -2,
-                        12,
-                        10,
-                        12,
-                        10
-                )
-        );
+                card.addView(
+                        text(
+                                "الدرجة: " +
+                                r.optInt(
+                                        "correct"
+                                ) +
+                                " / " +
+                                r.optInt(
+                                        "total"
+                                ),
+                                15,
+                                GOLD,
+                                true
+                        )
+                );
 
-        JSONArray questions;
-
-        try {
-
-            questions =
-                    new JSONArray(
-                            exam.optString(
-                                    "questionsData",
-                                    "[]"
-                            )
-                    );
-
-        } catch (Exception e) {
-
-            questions =
-                    new JSONArray();
+                page.addView(
+                        card,
+                        lp(-1, -2, 0, 0, 0, 8)
+                );
+            }
         }
 
-        if (
-                questions.length() == 0
-        ) {
+        addBack(
+                page,
+                this::showTeacherHome
+        );
 
-            emptyBox(
-                    "لا توجد أسئلة",
-                    "لم يقم المدرس بإضافة أسئلة لهذا الامتحان بعد"
+        setPage(
+                page,
+                true
+        );
+    }
+
+    /* =========================================================
+       NOTES
+       ========================================================= */
+
+    private void showNotes(
+            boolean teacher
+    ) {
+
+        LinearLayout page =
+                pageBase(
+                        teacher
+                                ? "إدارة المذكرات"
+                                : "مذكرات الشرح",
+                        teacher
+                                ? "المدرس يضيف المذكرات"
+                                : "المذكرات التي أضافها المدرس"
+                );
+
+        if (teacher) {
+
+            Button add =
+                    primary(
+                            "＋ إضافة مذكرة"
+                    );
+
+            page.addView(
+                    add,
+                    lp(-1, dp(54), 0, 0, 0, 12)
+            );
+
+            add.setOnClickListener(
+                    v -> createNote()
+            );
+        }
+
+        JSONArray notes =
+                readArray(
+                        "notes"
+                );
+
+        if (notes.length() == 0) {
+
+            page.addView(
+                    emptyCard(
+                            "لا توجد مذكرات حتى الآن."
+                    )
             );
 
         } else {
 
             for (
                     int i = 0;
-                    i < questions.length();
+                    i < notes.length();
                     i++
             ) {
 
-                try {
+                JSONObject n =
+                        notes.optJSONObject(i);
 
-                    JSONObject q =
-                            questions.getJSONObject(
-                                    i
-                            );
+                if (n == null) continue;
 
-                    LinearLayout card =
-                            createCard();
+                LinearLayout card =
+                        panel();
 
-                    TextView qTitle =
-                            text(
-                                    "السؤال "
-                                            + (i + 1)
-                                            + "\n"
-                                            + q.optString(
-                                                    "question",
-                                                    ""
-                                            ),
-                                    17,
-                                    foreground(),
-                                    true
-                            );
+                card.addView(
+                        text(
+                                "📚 " +
+                                n.optString(
+                                        "title"
+                                ),
+                                17,
+                                GOLD,
+                                true
+                        )
+                );
 
-                    qTitle.setGravity(
-                            Gravity.RIGHT
-                    );
+                card.addView(
+                        text(
+                                n.optString(
+                                        "body"
+                                ),
+                                14,
+                                textColor(),
+                                false
+                        )
+                );
 
-                    qTitle.setLineSpacing(
-                            dp(3),
-                            1.05f
-                    );
-
-                    card.addView(
-                            qTitle,
-                            marginParams(
-                                    -1,
-                                    -2,
-                                    5,
-                                    5,
-                                    5,
-                                    8
-                            )
-                    );
-
-                    JSONArray options =
-                            q.optJSONArray(
-                                    "options"
-                            );
-
-                    if (
-                            options != null
-                    ) {
-
-                        int correct =
-                                q.optInt(
-                                        "correctAnswer",
-                                        -1
-                                );
-
-                        for (
-                                int j = 0;
-                                j < options.length();
-                                j++
-                        ) {
-
-                            String mark =
-                                    j == correct
-                                            ? "✓ "
-                                            : "";
-
-                            TextView option =
-                                    text(
-                                            mark
-                                                    + options.optString(
-                                                            j,
-                                                            ""
-                                                    ),
-                                            15,
-                                            j == correct
-                                                    ? GOLD
-                                                    : foregroundSecondary(),
-                                            j == correct
-                                    );
-
-                            option.setGravity(
-                                    Gravity.RIGHT
-                            );
-
-                            card.addView(
-                                    option,
-                                    marginParams(
-                                            -1,
-                                            -2,
-                                            10,
-                                            2,
-                                            10,
-                                            2
-                                    )
-                            );
-                        }
-                    }
-
-                    String explanation =
-                            q.optString(
-                                    "explanation",
-                                    ""
-                            );
-
-                    if (
-                            !explanation.isEmpty()
-                    ) {
-
-                        TextView exp =
-                                text(
-                                        "💡 الشرح:\n"
-                                                + explanation,
-                                        14,
-                                        foregroundSecondary(),
-                                        false
-                                );
-
-                        exp.setGravity(
-                                Gravity.RIGHT
-                        );
-
-                        card.addView(
-                                exp,
-                                marginParams(
-                                        -1,
-                                        -2,
-                                        8,
-                                        10,
-                                        8,
-                                        5
-                                )
-                        );
-                    }
-
-                    Button delete =
-                            secondaryButton(
-                                    "حذف السؤال"
-                            );
-
-                    final int questionIndex =
-                            i;
-
-                    delete.setOnClickListener(
-                            v ->
-                                    confirmDeleteQuestion(
-                                            examId,
-                                            questionIndex
-                                    )
-                    );
-
-                    card.addView(
-                            delete,
-                            marginParams(
-                                    -1,
-                                    dp(48),
-                                    5,
-                                    10,
-                                    5,
-                                    5
-                            )
-                    );
-
-                    content.addView(
-                            card,
-                            marginParams(
-                                    -1,
-                                    -2,
-                                    10,
-                                    6,
-                                    10,
-                                    6
-                            )
-                    );
-
-                } catch (Exception ignored) {
-                }
+                page.addView(
+                        card,
+                        lp(-1, -2, 0, 0, 0, 9)
+                );
             }
         }
 
-        Button add =
-                mainButton(
-                        "➕ إضافة سؤال جديد"
+        addBack(
+                page,
+                teacher
+                        ? this::showTeacherHome
+                        : this::showStudentHome
+        );
+
+        setPage(
+                page,
+                true
+        );
+    }
+
+    private void createNote() {
+
+        LinearLayout box =
+                new LinearLayout(this);
+
+        box.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        EditText title =
+                input(
+                        "عنوان المذكرة"
                 );
 
+        EditText body =
+                input(
+                        "محتوى المذكرة"
+                );
+
+        body.setMinHeight(
+                dp(160)
+        );
+
+        box.addView(title);
+        box.addView(body);
+
+        AlertDialog dialog =
+                new AlertDialog.Builder(this)
+                        .setTitle(
+                                "إضافة مذكرة"
+                        )
+                        .setView(box)
+                        .setNegativeButton(
+                                "إلغاء",
+                                null
+                        )
+                        .setPositiveButton(
+                                "حفظ",
+                                null
+                        )
+                        .create();
+
+        dialog.setOnShowListener(
+                x -> {
+
+                    dialog.getButton(
+                            AlertDialog.BUTTON_POSITIVE
+                    ).setOnClickListener(
+                            v -> {
+
+                                if (
+                                        title.getText()
+                                                .toString()
+                                                .trim()
+                                                .isEmpty()
+                                ) {
+
+                                    title.setError(
+                                            "اكتب العنوان"
+                                    );
+
+                                    return;
+                                }
+
+                                JSONObject note =
+                                        new JSONObject();
+
+                                try {
+
+                                    note.put(
+                                            "id",
+                                            UUID.randomUUID()
+                                                    .toString()
+                                    );
+
+                                    note.put(
+                                            "title",
+                                            title.getText()
+                                                    .toString()
+                                    );
+
+                                    note.put(
+                                            "body",
+                                            body.getText()
+                                                    .toString()
+                                    );
+
+                                    appendArray(
+                                            "notes",
+                                            note
+                                    );
+
+                                } catch (Exception ignored) {
+                                }
+
+                                dialog.dismiss();
+
+                                showNotes(true);
+                            }
+                    );
+                }
+        );
+
+        dialog.show();
+    }
+
+    /* =========================================================
+       AZKAR
+       ========================================================= */
+
+    private void showAzkar(
+            boolean logged
+    ) {
+
+        LinearLayout page =
+                pageBase(
+                        "الأذكار",
+                        "ورد يومي بسيط"
+                );
+
+        page.addView(
+                azkarCard(
+                        "أذكار الصباح",
+                        "ابدأ يومك بذكر الله، والاستغفار، والصلاة على النبي ﷺ."
+                )
+        );
+
+        page.addView(
+                azkarCard(
+                        "أذكار المساء",
+                        "اختم يومك بذكر الله والدعاء والاستغفار."
+                )
+        );
+
+        page.addView(
+                azkarCard(
+                        "الاستغفار",
+                        "استغفر الله وأتوب إليه."
+                )
+        );
+
+        page.addView(
+                azkarCard(
+                        "الصلاة على النبي ﷺ",
+                        "اللهم صل وسلم وبارك على نبينا محمد."
+                )
+        );
+
+        addBack(
+                page,
+                logged
+                        ? this::showStudentHome
+                        : this::showHome
+        );
+
+        setPage(
+                page,
+                true
+        );
+    }
+
+    private View azkarCard(
+            String title,
+            String body
+    ) {
+
+        LinearLayout card =
+                panel();
+
+        card.addView(
+                text(
+                        "🤲 " + title,
+                        17,
+                        GOLD,
+                        true
+                )
+        );
+
+        card.addView(
+                text(
+                        body,
+                        14,
+                        textColor(),
+                        false
+                )
+        );
+
+        return card;
+    }
+
+    /* =========================================================
+       GROUPS
+       ========================================================= */
+
+    private void teacherGroups() {
+
+        LinearLayout page =
+                pageBase(
+                        "مجموعات الطلاب",
+                        "تنظيم الطلاب داخل مجموعات"
+                );
+
+        String[] groups =
+                {
+                        "جروب أولى بكالوريا بنات",
+                        "جروب أولى بكالوريا ولاد",
+                        "جروب تانية بكالوريا بنات",
+                        "جروب تانية بكالوريا ولاد",
+                        "طلاب المايسترو تالتة إعدادي",
+                        "جروب ذكرى ومنفعة"
+                };
+
+        for (String group : groups) {
+
+            page.addView(
+                    messageCard(
+                            "👥  " + group
+                    )
+            );
+        }
+
+        addBack(
+                page,
+                this::showTeacherHome
+        );
+
+        setPage(
+                page,
+                true
+        );
+    }
+
+    /* =========================================================
+       UPDATES
+       ========================================================= */
+
+    private void showUpdates() {
+
+        LinearLayout page =
+                pageBase(
+                        "التحديثات",
+                        "آخر أخبار المنصة"
+                );
+
+        JSONArray updates =
+                readArray(
+                        "updates"
+                );
+
+        if (updates.length() == 0) {
+
+            page.addView(
+                    emptyCard(
+                            "لا توجد تحديثات حالياً."
+                    )
+            );
+
+        } else {
+
+            for (
+                    int i = 0;
+                    i < updates.length();
+                    i++
+            ) {
+
+                JSONObject u =
+                        updates.optJSONObject(i);
+
+                if (u == null) continue;
+
+                page.addView(
+                        messageCard(
+                                "🔔 " +
+                                u.optString(
+                                        "text"
+                                )
+                        )
+                );
+            }
+        }
+
+        addBack(
+                page,
+                this::showStudentHome
+        );
+
+        setPage(
+                page,
+                true
+        );
+    }
+
+    private void teacherUpdates() {
+
+        LinearLayout page =
+                pageBase(
+                        "إدارة التحديثات",
+                        "إضافة رسالة تظهر للطلاب"
+                );
+
+        Button add =
+                primary(
+                        "＋ إضافة تحديث"
+                );
+
+        page.addView(
+                add,
+                lp(-1, dp(54), 0, 0, 0, 12)
+        );
+
         add.setOnClickListener(
-                v ->
-                        addQuestionDialog(
-                                examId
+                v -> {
+
+                    EditText input =
+                            input(
+                                    "نص التحديث"
+                            );
+
+                    new AlertDialog.Builder(this)
+                            .setTitle(
+                                    "تحديث جديد"
+                            )
+                            .setView(input)
+                            .setNegativeButton(
+                                    "إلغاء",
+                                    null
+                            )
+                            .setPositiveButton(
+                                    "نشر",
+                                    (d, w) -> {
+
+                                        JSONObject u =
+                                                new JSONObject();
+
+                                        try {
+
+                                            u.put(
+                                                    "text",
+                                                    input.getText()
+                                                            .toString()
+                                            );
+
+                                            appendArray(
+                                                    "updates",
+                                                    u
+                                            );
+
+                                        } catch (
+                                                Exception ignored
+                                        ) {
+                                        }
+
+                                        teacherUpdates();
+                                    }
+                            )
+                            .show();
+                }
+        );
+
+        addBack(
+                page,
+                this::showTeacherHome
+        );
+
+        setPage(
+                page,
+                true
+        );
+    }
+
+    /* =========================================================
+       ACHIEVEMENTS
+       ========================================================= */
+
+    private void showAchievements() {
+
+        LinearLayout page =
+                pageBase(
+                        "إنجازاتي",
+                        "تابع تقدمك في المذاكرة"
+                );
+
+        JSONArray results =
+                readArray(
+                        "results"
+                );
+
+        int exams = 0;
+        int correct = 0;
+
+        for (
+                int i = 0;
+                i < results.length();
+                i++
+        ) {
+
+            JSONObject r =
+                    results.optJSONObject(i);
+
+            if (r == null) continue;
+
+            if (
+                    r.optString(
+                            "student"
+                    ).equals(
+                            currentStudent
+                    )
+            ) {
+
+                exams++;
+
+                correct +=
+                        r.optInt(
+                                "correct"
+                        );
+            }
+        }
+
+        page.addView(
+                messageCard(
+                        "🏆 الامتحانات المنجزة: " +
+                        exams +
+                        "\n\n" +
+                        "✓ مجموع الإجابات الصحيحة: " +
+                        correct
+                )
+        );
+
+        page.addView(
+                messageCard(
+                        "استمر في التعلم والمراجعة، وكل نتيجة جديدة ستظهر في حسابك."
+                )
+        );
+
+        addBack(
+                page,
+                this::showStudentHome
+        );
+
+        setPage(
+                page,
+                true
+        );
+    }
+
+    /* =========================================================
+       SETTINGS
+       ========================================================= */
+
+    private void showSettings(
+            boolean teacher
+    ) {
+
+        LinearLayout page =
+                pageBase(
+                        "الإعدادات",
+                        "تحكم في مظهر التطبيق"
+                );
+
+        page.addView(
+                sectionTitle(
+                        "المظهر"
+                )
+        );
+
+        Button theme =
+                secondary(
+                        darkMode
+                                ? "تفعيل الوضع النهاري"
+                                : "تفعيل الوضع الليلي"
+                );
+
+        page.addView(
+                theme,
+                lp(-1, dp(54), 0, 0, 0, 10)
+        );
+
+        theme.setOnClickListener(
+                v -> {
+
+                    darkMode =
+                            !darkMode;
+
+                    prefs.edit()
+                            .putBoolean(
+                                    "dark_mode",
+                                    darkMode
+                            )
+                            .apply();
+
+                    showSettings(
+                            teacher
+                    );
+                }
+        );
+
+        page.addView(
+                messageCard(
+                        "🔒 أثناء الامتحان يتم تفعيل حماية الشاشة لمنع التقاط الشاشة."
+                )
+        );
+
+        page.addView(
+                messageCard(
+                        "ℹ️ التطبيق في هذه النسخة يحفظ البيانات محلياً على الجهاز."
+                )
+        );
+
+        page.addView(
+                messageCard(
+                        "👨‍💻 مع المبرمج أو المطور محمود كليب\n01112244710"
+                )
+        );
+
+        addBack(
+                page,
+                teacher
+                        ? this::showTeacherHome
+                        : (
+                        role.equals("student")
+                                ? this::showStudentHome
+                                : this::showHome
+                )
+        );
+
+        setPage(
+                page,
+                true
+        );
+    }
+
+    /* =========================================================
+       UI HELPERS
+       ========================================================= */
+
+    private LinearLayout pageBase(
+            String title,
+            String subtitle
+    ) {
+
+        LinearLayout page =
+                new LinearLayout(this);
+
+        page.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        page.setBackgroundColor(
+                backgroundColor()
+        );
+
+        ScrollView scroll =
+                new ScrollView(this);
+
+        LinearLayout inside =
+                new LinearLayout(this);
+
+        inside.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        inside.setPadding(
+                dp(16),
+                dp(16),
+                dp(16),
+                dp(25)
+        );
+
+        LinearLayout header =
+                panel();
+
+        header.setPadding(
+                dp(16),
+                dp(16),
+                dp(16),
+                dp(16)
+        );
+
+        TextView t =
+                text(
+                        title,
+                        24,
+                        GOLD,
+                        true
+                );
+
+        t.setGravity(
+                Gravity.RIGHT
+        );
+
+        header.addView(t);
+
+        TextView s =
+                text(
+                        subtitle,
+                        13,
+                        textColor(),
+                        false
+                );
+
+        s.setGravity(
+                Gravity.RIGHT
+        );
+
+        header.addView(s);
+
+        inside.addView(
+                header,
+                lp(-1, -2, 0, 0, 0, 14)
+        );
+
+        scroll.addView(inside);
+
+        page.addView(
+                scroll,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        0,
+                        1
+                )
+        );
+
+        return page;
+    }
+
+    private void setPage(
+            LinearLayout page,
+            boolean navigation
+    ) {
+
+        if (!navigation) {
+
+            setContentView(page);
+
+            return;
+        }
+
+        LinearLayout wrapper =
+                new LinearLayout(this);
+
+        wrapper.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        wrapper.setBackgroundColor(
+                backgroundColor()
+        );
+
+        wrapper.addView(
+                page,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        0,
+                        1
+                )
+        );
+
+        wrapper.addView(
+                bottomForRole(),
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(70)
+                )
+        );
+
+        setContentView(wrapper);
+    }
+
+    private LinearLayout bottomForRole() {
+
+        LinearLayout bar =
+                navBar();
+
+        bar.addView(
+                navItem(
+                        "⌂",
+                        "الرئيسية",
+                        v -> {
+                            if (
+                                    role.equals(
+                                            "teacher"
+                                    )
+                            ) {
+                                showTeacherHome();
+                            } else if (
+                                    role.equals(
+                                            "student"
+                                    )
+                            ) {
+                                showStudentHome();
+                            } else {
+                                showHome();
+                            }
+                        }
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                )
+        );
+
+        bar.addView(
+                navItem(
+                        "📝",
+                        "الامتحانات",
+                        v -> {
+                            if (
+                                    role.equals(
+                                            "teacher"
+                                    )
+                            ) {
+                                teacherExams();
+                            } else if (
+                                    role.equals(
+                                            "student"
+                                    )
+                            ) {
+                                showStudentExams();
+                            } else {
+                                toast(
+                                        "اختار طالب أو مدرس"
+                                );
+                            }
+                        }
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                )
+        );
+
+        bar.addView(
+                navItem(
+                        "📚",
+                        "المذكرات",
+                        v -> {
+                            if (
+                                    role.equals(
+                                            "teacher"
+                                    )
+                            ) {
+                                showNotes(true);
+                            } else if (
+                                    role.equals(
+                                            "student"
+                                    )
+                            ) {
+                                showNotes(false);
+                            } else {
+                                toast(
+                                        "اختار طالب أو مدرس"
+                                );
+                            }
+                        }
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                )
+        );
+
+        bar.addView(
+                navItem(
+                        "🤲",
+                        "الأذكار",
+                        v -> showAzkar(
+                                role.equals(
+                                        "student"
+                                )
+                        )
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                )
+        );
+
+        bar.addView(
+                navItem(
+                        "⚙",
+                        "الإعدادات",
+                        v -> showSettings(
+                                role.equals(
+                                        "teacher"
+                                )
+                        )
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                )
+        );
+
+        return bar;
+    }
+
+    private LinearLayout navBar() {
+
+        LinearLayout bar =
+                new LinearLayout(this);
+
+        bar.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        bar.setGravity(
+                Gravity.CENTER
+        );
+
+        bar.setPadding(
+                dp(5),
+                dp(4),
+                dp(5),
+                dp(4)
+        );
+
+        bar.setBackgroundColor(
+                DARK
+        );
+
+        return bar;
+    }
+
+    private View navItem(
+            String icon,
+            String title,
+            View.OnClickListener listener
+    ) {
+
+        LinearLayout item =
+                new LinearLayout(this);
+
+        item.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        item.setGravity(
+                Gravity.CENTER
+        );
+
+        TextView i =
+                text(
+                        icon,
+                        20,
+                        GOLD,
+                        false
+                );
+
+        i.setGravity(
+                Gravity.CENTER
+        );
+
+        item.addView(i);
+
+        TextView t =
+                text(
+                        title,
+                        9,
+                        WHITE,
+                        false
+                );
+
+        t.setGravity(
+                Gravity.CENTER
+        );
+
+        item.addView(t);
+
+        item.setOnClickListener(
+                listener
+        );
+
+        return item;
+    }
+
+    private TextView sectionTitle(
+            String title
+    ) {
+
+        TextView t =
+                text(
+                        "✦  " + title,
+                        19,
+                        GOLD,
+                        true
+                );
+
+        t.setGravity(
+                Gravity.RIGHT
+        );
+
+        t.setPadding(
+                0,
+                dp(12),
+                0,
+                dp(8)
+        );
+
+        return t;
+    }
+
+    private TextView label(
+            String text
+    ) {
+
+        TextView t =
+                text(
+                        text,
+                        14,
+                        textColor(),
+                        true
+                );
+
+        t.setGravity(
+                Gravity.RIGHT
+        );
+
+        return t;
+    }
+
+    private EditText input(
+            String hint
+    ) {
+
+        EditText e =
+                new EditText(this);
+
+        e.setHint(hint);
+        e.setTextSize(15);
+        e.setTextColor(textColor());
+        e.setHintTextColor(GRAY);
+        e.setGravity(
+                Gravity.RIGHT |
+                Gravity.CENTER_VERTICAL
+        );
+
+        e.setPadding(
+                dp(14),
+                dp(8),
+                dp(14),
+                dp(8)
+        );
+
+        GradientDrawable bg =
+                new GradientDrawable();
+
+        bg.setColor(
+                darkMode
+                        ? Color.rgb(
+                                20,
+                                48,
+                                38
+                        )
+                        : WHITE
+        );
+
+        bg.setCornerRadius(
+                dp(12)
+        );
+
+        bg.setStroke(
+                dp(1),
+                GOLD
+        );
+
+        e.setBackground(bg);
+
+        return e;
+    }
+
+    private Button primary(
+            String title
+    ) {
+
+        Button b =
+                new Button(this);
+
+        b.setText(title);
+        b.setTextSize(14);
+        b.setTextColor(DARK);
+        b.setGravity(Gravity.CENTER);
+        b.setAllCaps(false);
+        b.setPadding(
+                dp(8),
+                0,
+                dp(8),
+                0
+        );
+
+        GradientDrawable bg =
+                new GradientDrawable();
+
+        bg.setColor(GOLD);
+
+        bg.setCornerRadius(
+                dp(14)
+        );
+
+        b.setBackground(bg);
+
+        return b;
+    }
+
+    private Button secondary(
+            String title
+    ) {
+
+        Button b =
+                new Button(this);
+
+        b.setText(title);
+        b.setTextSize(13);
+        b.setTextColor(GOLD);
+        b.setGravity(Gravity.CENTER);
+        b.setAllCaps(false);
+
+        GradientDrawable bg =
+                new GradientDrawable();
+
+        bg.setColor(
+                darkMode
+                        ? Color.rgb(
+                                18,
+                                50,
+                                38
+                        )
+                        : WHITE
+        );
+
+        bg.setCornerRadius(
+                dp(14)
+        );
+
+        bg.setStroke(
+                dp(1),
+                GOLD
+        );
+
+        b.setBackground(bg);
+
+        return b;
+    }
+
+    private LinearLayout panel() {
+
+        LinearLayout p =
+                new LinearLayout(this);
+
+        p.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        GradientDrawable bg =
+                new GradientDrawable();
+
+        bg.setColor(
+                darkMode
+                        ? Color.rgb(
+                                12,
+                                48,
+                                35
+                        )
+                        : WHITE
+        );
+
+        bg.setCornerRadius(
+                dp(18)
+        );
+
+        bg.setStroke(
+                dp(1),
+                darkMode
+                        ? Color.rgb(
+                                100,
+                                90,
+                                45
+                        )
+                        : Color.rgb(
+                                220,
+                                205,
+                                150
                         )
         );
 
-        content.addView(
-                add,
-                marginParams(
-                        -1,
-                        dp(55),
-                        20,
-                        12,
-                        20,
-                        5
-                )
-        );
+        p.setBackground(bg);
 
-        Button back =
-                secondaryButton(
-                        "رجوع"
-                );
-
-        back.setOnClickListener(
-                v ->
-                        teacherQuestions()
-        );
-
-        content.addView(
-                back,
-                marginParams(
-                        -1,
-                        dp(52),
-                        20,
-                        5,
-                        20,
-                        15
-                )
-        );
-
-        addDecorationBottom();
+        return p;
     }
 
-    // =========================================================
-    // تأكيد حذف سؤال
-    // =========================================================
+    private LinearLayout clickablePanel() {
 
-    private void confirmDeleteQuestion(
-            String examId,
-            int questionIndex
+        LinearLayout p =
+                panel();
+
+        p.setClickable(true);
+
+        p.setFocusable(true);
+
+        return p;
+    }
+
+    private LinearLayout actionCard(
+            String icon,
+            String title,
+            String subtitle,
+            View.OnClickListener listener
     ) {
 
-        new AlertDialog.Builder(
-                this
-        )
-                .setTitle(
-                        "حذف السؤال"
-                )
-                .setMessage(
-                        "هل تريد حذف هذا السؤال نهائيًا؟"
-                )
-                .setNegativeButton(
-                        "إلغاء",
-                        null
-                )
-                .setPositiveButton(
-                        "حذف",
-                        (dialog, which) -> {
+        LinearLayout card =
+                clickablePanel();
 
-                            deleteQuestion(
-                                    examId,
-                                    questionIndex
-                            );
+        card.setGravity(
+                Gravity.CENTER
+        );
 
-                            showExamQuestions(
-                                    examId
-                            );
-                        }
-                )
-                .show();
+        card.setPadding(
+                dp(5),
+                dp(9),
+                dp(5),
+                dp(9)
+        );
+
+        TextView i =
+                text(
+                        icon,
+                        27,
+                        GOLD,
+                        false
+                );
+
+        i.setGravity(
+                Gravity.CENTER
+        );
+
+        card.addView(i);
+
+        TextView t =
+                text(
+                        title,
+                        14,
+                        textColor(),
+                        true
+                );
+
+        t.setGravity(
+                Gravity.CENTER
+        );
+
+        card.addView(t);
+
+        TextView s =
+                text(
+                        subtitle,
+                        9,
+                        GRAY,
+                        false
+                );
+
+        s.setGravity(
+                Gravity.CENTER
+        );
+
+        card.addView(s);
+
+        card.setOnClickListener(
+                listener
+        );
+
+        return card;
     }
 
-    // =========================================================
-    // حذف سؤال
-    // =========================================================
+    private LinearLayout messageCard(
+            String message
+    ) {
 
-    private void deleteQuestion(
-            String examId,
-            int questionIndex
+        LinearLayout card =
+                panel();
+
+        card.setPadding(
+                dp(14),
+                dp(13),
+                dp(14),
+                dp(13)
+        );
+
+        TextView t =
+                text(
+                        message,
+                        13,
+                        textColor(),
+                        false
+                );
+
+        t.setGravity(
+                Gravity.RIGHT
+        );
+
+        card.addView(t);
+
+        card.setPadding(
+                dp(15),
+                dp(15),
+                dp(15),
+                dp(15)
+        );
+
+        contentSafeAdd(card);
+
+        return card;
+    }
+
+    private LinearLayout emptyCard(
+            String message
+    ) {
+
+        LinearLayout card =
+                panel();
+
+        card.setGravity(
+                Gravity.CENTER
+        );
+
+        card.setPadding(
+                dp(20),
+                dp(25),
+                dp(20),
+                dp(25)
+        );
+
+        TextView t =
+                text(
+                        message,
+                        14,
+                        GRAY,
+                        false
+                );
+
+        t.setGravity(
+                Gravity.CENTER
+        );
+
+        card.addView(t);
+
+        return card;
+    }
+
+    private void contentSafeAdd(
+            View v
+    ) {
+
+        if (content != null) {
+            // يستخدم فقط مع الصفحات التي أنشأها pageBase.
+            // لا يضيف شيئاً إذا كانت الصفحة غير موجودة.
+        }
+    }
+
+    private LinearLayout horizontal() {
+
+        LinearLayout l =
+                new LinearLayout(this);
+
+        l.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        l.setGravity(
+                Gravity.CENTER
+        );
+
+        return l;
+    }
+
+    private TextView text(
+            String value,
+            float size,
+            int color,
+            boolean bold
+    ) {
+
+        TextView t =
+                new TextView(this);
+
+        t.setText(value);
+        t.setTextSize(size);
+        t.setTextColor(color);
+
+        if (bold) {
+            t.setTypeface(
+                    null,
+                    android.graphics.Typeface.BOLD
+            );
+        }
+
+        t.setIncludeFontPadding(true);
+
+        t.setPadding(
+                dp(2),
+                dp(3),
+                dp(2),
+                dp(3)
+        );
+
+        return t;
+    }
+
+    private LinearLayout spaceW(
+            int width
+    ) {
+
+        LinearLayout s =
+                new LinearLayout(this);
+
+        s.setLayoutParams(
+                new LinearLayout.LayoutParams(
+                        dp(width),
+                        1
+                )
+        );
+
+        return s;
+    }
+
+    private void addBack(
+            LinearLayout page,
+            final Runnable action
+    ) {
+
+        Button back =
+                secondary(
+                        "← رجوع"
+                );
+
+        LinearLayout.LayoutParams params =
+                lp(
+                        -1,
+                        dp(52),
+                        0,
+                        10,
+                        0,
+                        0
+                );
+
+        page.addView(
+                back,
+                params
+        );
+
+        back.setOnClickListener(
+                v -> action.run()
+        );
+    }
+
+    /* =========================================================
+       DATA
+       ========================================================= */
+
+    private JSONArray readArray(
+            String key
+    ) {
+
+        String raw =
+                prefs.getString(
+                        key,
+                        "[]"
+                );
+
+        try {
+
+            return new JSONArray(raw);
+
+        } catch (Exception e) {
+
+            return new JSONArray();
+        }
+    }
+
+    private void saveArray(
+            String key,
+            JSONArray array
+    ) {
+
+        prefs.edit()
+                .putString(
+                        key,
+                        array.toString()
+                )
+                .apply();
+    }
+
+    private void appendArray(
+            String key,
+            JSONObject object
+    ) {
+
+        JSONArray array =
+                readArray(key);
+
+        array.put(object);
+
+        saveArray(
+                key,
+                array
+        );
+    }
+
+    private JSONObject findExamById(
+            String id
     ) {
 
         JSONArray exams =
-                getExams();
+                readArray(
+                        "exams"
+                );
 
         for (
                 int i = 0;
@@ -3842,74 +4730,269 @@ ax(1, minutes)
                 i++
         ) {
 
-            try {
+            JSONObject e =
+                    exams.optJSONObject(i);
 
-                JSONObject exam =
-                        exams.getJSONObject(i);
+            if (e == null) continue;
 
-                if (
-                        exam.optString(
-                                "id",
-                                ""
-                        ).equals(
-                                examId
-                        )
-                ) {
+            if (
+                    e.optString(
+                            "id"
+                    ).equals(id)
+            ) {
 
-                    JSONArray questions =
-                            new JSONArray(
-                                    exam.optString(
-                                            "questionsData",
-                                            "[]"
-                                    )
-                            );
-
-                    if (
-                            questionIndex >= 0 &&
-                            questionIndex <
-                                    questions.length()
-                    ) {
-
-                        JSONArray updated =
-                                new JSONArray();
-
-                        for (
-                                int j = 0;
-                                j < questions.length();
-                                j++
-                        ) {
-
-                            if (
-                                    j != questionIndex
-                            ) {
-
-                                updated.put(
-                                        questions.getJSONObject(
-                                                j
-                                        )
-                                );
-                            }
-                        }
-
-                        exam.put(
-                                "questionsData",
-                                updated.toString()
-                        );
-
-                        exams.put(
-                                i,
-                                exam
-                        );
-
-                        saveExams(
-                                exams
-                        );
-                    }
-
-                    return;
-                }
-
-            } catch (Exception ignored) {
+                return e;
             }
         }
-                    }
+
+        return null;
+    }
+
+    private JSONObject findExamByCode(
+            String code
+    ) {
+
+        JSONArray exams =
+                readArray(
+                        "exams"
+                );
+
+        for (
+                int i = 0;
+                i < exams.length();
+                i++
+        ) {
+
+            JSONObject e =
+                    exams.optJSONObject(i);
+
+            if (e == null) continue;
+
+            if (
+                    e.optString(
+                            "code",
+                            ""
+                    ).equals(code)
+            ) {
+
+                return e;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isCodeUsed(
+            String code,
+            String student
+    ) {
+
+        JSONArray used =
+                readArray(
+                        "used_codes"
+                );
+
+        for (
+                int i = 0;
+                i < used.length();
+                i++
+        ) {
+
+            JSONObject item =
+                    used.optJSONObject(i);
+
+            if (item == null) continue;
+
+            if (
+                    item.optString(
+                            "code"
+                    ).equals(code)
+                    &&
+                    item.optString(
+                            "student"
+                    ).equals(student)
+            ) {
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void markCodeUsed(
+            String code,
+            String student
+    ) {
+
+        if (code.isEmpty()) return;
+
+        JSONObject item =
+                new JSONObject();
+
+        try {
+
+            item.put(
+                    "code",
+                    code
+            );
+
+            item.put(
+                    "student",
+                    student
+            );
+
+            item.put(
+                    "time",
+                    System.currentTimeMillis()
+            );
+
+        } catch (Exception ignored) {
+        }
+
+        appendArray(
+                "used_codes",
+                item
+        );
+    }
+
+    private void saveString(
+            String key,
+            String value
+    ) {
+
+        prefs.edit()
+                .putString(
+                        key,
+                        value
+                )
+                .apply();
+    }
+
+    /* =========================================================
+       COLORS / LAYOUT
+       ========================================================= */
+
+    private int backgroundColor() {
+
+        return darkMode
+                ? Color.rgb(
+                        4,
+                        27,
+                        20
+                )
+                : LIGHT;
+    }
+
+    private int textColor() {
+
+        return darkMode
+                ? WHITE
+                : BLACK;
+    }
+
+    private LinearLayout.LayoutParams lp(
+            int width,
+            int height,
+            int left,
+            int top,
+            int right,
+            int bottom
+    ) {
+
+        LinearLayout.LayoutParams p =
+                new LinearLayout.LayoutParams(
+                        width,
+                        height
+                );
+
+        p.setMargins(
+                dp(left),
+                dp(top),
+                dp(right),
+                dp(bottom)
+        );
+
+        return p;
+    }
+
+    private int dp(
+            int value
+    ) {
+
+        return (int)(
+                value *
+                getResources()
+                        .getDisplayMetrics()
+                        .density
+        );
+    }
+
+    private String formatTime(
+            long millis
+    ) {
+
+        long seconds =
+                millis / 1000;
+
+        long minutes =
+                seconds / 60;
+
+        seconds =
+                seconds % 60;
+
+        return String.format(
+                java.util.Locale.US,
+                "%02d:%02d",
+                minutes,
+                seconds
+        );
+    }
+
+    private void toast(
+            String message
+    ) {
+
+        Toast.makeText(
+                this,
+                message,
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    /* =========================================================
+       BACK BUTTON
+       ========================================================= */
+
+    @Override
+    public void onBackPressed() {
+
+        if (examTimer != null) {
+
+            toast(
+                    "لا يمكن الخروج أثناء الامتحان"
+            );
+
+            return;
+        }
+
+        super.onBackPressed();
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        if (examTimer != null) {
+
+            examTimer.cancel();
+
+            examTimer = null;
+        }
+
+        getWindow().clearFlags(
+                WindowManager.LayoutParams.FLAG_SECURE
+        );
+
+        super.onDestroy();
+    }
+}
