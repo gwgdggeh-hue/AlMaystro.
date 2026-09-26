@@ -1,1929 +1,818 @@
 package com.almaystro.app;
 
 import android.app.Activity;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Locale;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.Arrays;
+import java.util.UUID;
 
 public class MainActivity extends Activity {
 
-    // =========================
-    // ألوان التطبيق
-    // =========================
-
-    private static final int DARK = Color.rgb(3, 34, 24);
-    private static final int GREEN = Color.rgb(8, 57, 40);
-    private static final int GREEN_2 = Color.rgb(12, 70, 49);
     private static final int GOLD = Color.rgb(224, 190, 70);
-    private static final int GOLD_LIGHT = Color.rgb(248, 225, 145);
+    private static final int DARK = Color.rgb(5, 38, 27);
+    private static final int GREEN = Color.rgb(14, 70, 48);
+    private static final int LIGHT = Color.rgb(247, 245, 238);
     private static final int WHITE = Color.WHITE;
-    private static final int GRAY = Color.rgb(205, 210, 207);
-    private static final int RED = Color.rgb(220, 80, 70);
+    private static final int BLACK = Color.rgb(25, 25, 25);
+    private static final int GRAY = Color.rgb(105, 105, 105);
+    private static final int RED = Color.rgb(170, 55, 50);
 
-    // =========================
-    // بيانات الطالب
-    // =========================
+    private SharedPreferences prefs;
 
-    private String studentName = "";
-    private String examCode = "";
+    private LinearLayout root;
+    private LinearLayout content;
 
-    // =========================
-    // الامتحان
-    // =========================
+    private String role = "";
+    private String currentStudent = "";
+    private String currentTeacher = "";
 
+    private String currentExamId = "";
+    private JSONArray currentQuestions = new JSONArray();
     private int currentQuestion = 0;
-    private int score = 0;
-
-    private final int[] selectedAnswers = {
-            -1, -1, -1, -1, -1
-    };
+    private int[] currentAnswers = new int[0];
 
     private CountDownTimer examTimer;
-    private long timeLeft = 5 * 60 * 1000;
 
-    private TextView timerView;
-
-    // =========================
-    // أسئلة تجريبية فقط
-    // سيتم لاحقاً نقلها إلى Firebase
-    // =========================
-
-    private final String[] questions = {
-            "ما هي السنة التي سميت بعام الجماعة؟",
-            "من هو أول الخلفاء الراشدين؟",
-            "ما عاصمة الدولة الأموية؟",
-            "في أي قارة تقع مصر؟",
-            "ما اسم نهر مصر الرئيسي؟"
-    };
-
-    private final String[][] choices = {
-            {
-                    "41 هـ",
-                    "40 هـ",
-                    "42 هـ",
-                    "43 هـ"
-            },
-            {
-                    "عمر بن الخطاب",
-                    "أبو بكر الصديق",
-                    "عثمان بن عفان",
-                    "علي بن أبي طالب"
-            },
-            {
-                    "دمشق",
-                    "بغداد",
-                    "القاهرة",
-                    "المدينة"
-            },
-            {
-                    "آسيا",
-                    "أفريقيا",
-                    "أوروبا",
-                    "أمريكا"
-            },
-            {
-                    "النيل",
-                    "الفرات",
-                    "دجلة",
-                    "الأردن"
-            }
-    };
-
-    private final int[] correctAnswers = {
-            0,
-            1,
-            0,
-            1,
-            0
-    };
-
-    // =========================
-    // بداية التطبيق
-    // =========================
+    private boolean darkMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        prefs = getSharedPreferences("ALMAYSTRO_DATA", MODE_PRIVATE);
+        darkMode = prefs.getBoolean("dark_mode", false);
+
         getWindow().setStatusBarColor(DARK);
         getWindow().setNavigationBarColor(DARK);
 
-        showWelcome();
+        showHome();
     }
 
-    // =========================
-    // أدوات التصميم
-    // =========================
+    /* =========================================================
+       HOME
+       ========================================================= */
 
-    private GradientDrawable bg(int color, float radius) {
+    private void showHome() {
 
-        GradientDrawable d = new GradientDrawable();
+        role = "";
 
-        d.setColor(color);
-        d.setCornerRadius(radius);
-
-        return d;
-    }
-
-    private GradientDrawable outlinedCard() {
-
-        GradientDrawable d = new GradientDrawable();
-
-        d.setColor(GREEN);
-        d.setCornerRadius(32);
-        d.setStroke(2, GOLD);
-
-        return d;
-    }
-
-    private TextView tv(
-            String text,
-            float size,
-            int color,
-            int gravity
-    ) {
-
-        TextView t = new TextView(this);
-
-        t.setText(text);
-        t.setTextSize(size);
-        t.setTextColor(color);
-        t.setGravity(gravity);
-        t.setIncludeFontPadding(true);
-
-        return t;
-    }
-
-    private LinearLayout.LayoutParams lp(
-            int width,
-            int height,
-            int top,
-            int bottom
-    ) {
-
-        LinearLayout.LayoutParams p =
-                new LinearLayout.LayoutParams(width, height);
-
-        p.setMargins(0, top, 0, bottom);
-
-        return p;
-    }
-
-    private Button goldButton(String title) {
-
-        Button b = new Button(this);
-
-        b.setText(title);
-        b.setTextSize(17);
-        b.setTextColor(DARK);
-        b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        b.setGravity(Gravity.CENTER);
-        b.setAllCaps(false);
-
-        b.setPadding(18, 8, 18, 8);
-
-        b.setBackground(
-                bg(GOLD, 60)
-        );
-
-        return b;
-    }
-
-    private Button outlineButton(String title) {
-
-        Button b = new Button(this);
-
-        b.setText(title);
-        b.setTextSize(16);
-        b.setTextColor(GOLD);
-        b.setGravity(Gravity.CENTER);
-        b.setAllCaps(false);
-
-        GradientDrawable d = new GradientDrawable();
-
-        d.setColor(GREEN);
-        d.setCornerRadius(60);
-        d.setStroke(2, GOLD);
-
-        b.setBackground(d);
-
-        return b;
-    }
-
-    private TextView ornament() {
-
-        return tv(
-                "✦  ✧  ❖  ✧  ✦",
-                22,
-                GOLD,
-                Gravity.CENTER
-        );
-    }
-
-    private EditText input(
-            String hint
-    ) {
-
-        EditText e = new EditText(this);
-
-        e.setHint(hint);
-        e.setHintTextColor(Color.rgb(160, 175, 168));
-        e.setTextColor(WHITE);
-        e.setTextSize(17);
-        e.setSingleLine(true);
-
-        e.setGravity(
-                Gravity.RIGHT |
-                        Gravity.CENTER_VERTICAL
-        );
-
-        e.setPadding(18, 5, 18, 5);
-
-        GradientDrawable d = new GradientDrawable();
-
-        d.setColor(GREEN_2);
-        d.setCornerRadius(30);
-        d.setStroke(2, GOLD);
-
-        e.setBackground(d);
-
-        return e;
-    }
-
-    private LinearLayout baseLayout() {
-
-        LinearLayout root = new LinearLayout(this);
-
-        root.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        root.setGravity(Gravity.CENTER_HORIZONTAL);
-
-        root.setPadding(
-                20,
-                20,
-                20,
-                20
-        );
-
-        root.setBackgroundColor(DARK);
-
-        return root;
-    }
-
-    private ScrollView scroll(LinearLayout content) {
+        root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(backgroundColor());
 
         ScrollView scroll = new ScrollView(this);
-
         scroll.setFillViewport(true);
+
+        content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(16), dp(16), dp(16), dp(20));
 
         scroll.addView(content);
 
-        return scroll;
-    }
+        LinearLayout hero = panel();
+        hero.setPadding(dp(16), dp(18), dp(16), dp(18));
 
-    // =========================
-    // شاشة الترحيب
-    // =========================
+        ImageView image = new ImageView(this);
 
-    private void showWelcome() {
+        int imageId = getResources().getIdentifier(
+                "maestro",
+                "drawable",
+                getPackageName()
+        );
 
-        LinearLayout root = baseLayout();
+        if (imageId != 0) {
+            image.setImageResource(imageId);
+            image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        }
 
-        root.addView(
-                ornament(),
-                lp(
+        hero.addView(
+                image,
+                new LinearLayout.LayoutParams(
                         -1,
-                        -2,
-                        8,
-                        8
+                        dp(145)
                 )
         );
 
-        TextView welcome = tv(
-                "أهلاً وسهلاً بك",
-                21,
-                GOLD_LIGHT,
-                Gravity.CENTER
-        );
-
-        welcome.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        root.addView(
-                welcome,
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        15
-                )
-        );
-
-        LinearLayout card = new LinearLayout(this);
-
-        card.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        card.setGravity(Gravity.CENTER);
-
-        card.setPadding(
-                22,
-                28,
-                22,
-                28
-        );
-
-        card.setBackground(
-                outlinedCard()
-        );
-
-        TextView title = tv(
-                "المايسترو",
-                40,
-                GOLD,
-                Gravity.CENTER
-        );
-
-        title.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        card.addView(title);
-
-        TextView teacher = tv(
+        TextView title = text(
                 "المايسترو شريف هيبه",
-                23,
-                WHITE,
-                Gravity.CENTER
+                27,
+                GOLD,
+                true
         );
 
-        teacher.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
+        title.setGravity(Gravity.CENTER);
 
-        card.addView(
-                teacher,
-                lp(
-                        -1,
-                        -2,
-                        8,
-                        8
-                )
-        );
+        hero.addView(title);
 
-        card.addView(
-                tv(
-                        "━━━━━━━━━━━━",
-                        18,
-                        GOLD,
-                        Gravity.CENTER
-                )
-        );
-
-        TextView slogan = tv(
+        TextView subtitle = text(
                 "هتتعلم التاريخ ببساطة",
-                19,
-                GOLD_LIGHT,
-                Gravity.CENTER
-        );
-
-        slogan.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        card.addView(
-                slogan,
-                lp(
-                        -1,
-                        -2,
-                        10,
-                        8
-                )
-        );
-
-        card.addView(
-                tv(
-                        "تعلم • اختبر نفسك • تابع مستواك",
-                        14,
-                        GRAY,
-                        Gravity.CENTER
-                )
-        );
-
-        root.addView(
-                card,
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        18
-                )
-        );
-
-        root.addView(
-                tv(
-                        "❖  ───── ✦ ─────  ❖",
-                        20,
-                        GOLD,
-                        Gravity.CENTER
-                ),
-                lp(
-                        -1,
-                        -2,
-                        2,
-                        12
-                )
-        );
-
-        Button start = goldButton(
-                "ابدأ الآن"
-        );
-
-        root.addView(
-                start,
-                lp(
-                        -1,
-                        60,
-                        5,
-                        12
-                )
-        );
-
-        root.addView(
-                tv(
-                        "منصة المايسترو التعليمية",
-                        14,
-                        GRAY,
-                        Gravity.CENTER
-                )
-        );
-
-        start.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        showRoles();
-                    }
-                }
-        );
-
-        setContentView(
-                scroll(root)
-        );
-    }
-
-    // =========================
-    // اختيار نوع المستخدم
-    // =========================
-
-    private void showRoles() {
-
-        LinearLayout root = baseLayout();
-
-        root.addView(
-                ornament(),
-                lp(
-                        -1,
-                        -2,
-                        15,
-                        15
-                )
-        );
-
-        TextView title = tv(
-                "مرحباً بك في المايسترو",
-                28,
-                GOLD,
-                Gravity.CENTER
-        );
-
-        title.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        root.addView(
-                title
-        );
-
-        root.addView(
-                tv(
-                        "اختر نوع الحساب للمتابعة",
-                        16,
-                        WHITE,
-                        Gravity.CENTER
-                ),
-                lp(
-                        -1,
-                        -2,
-                        6,
-                        25
-                )
-        );
-
-        LinearLayout student =
-                roleCard(
-                        "★",
-                        "طالب",
-                        "الامتحانات والنتائج ومتابعة المستوى"
-                );
-
-        root.addView(
-                student,
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        15
-                )
-        );
-
-        LinearLayout teacher =
-                roleCard(
-                        "◆",
-                        "مدرس",
-                        "إدارة الامتحانات والأسئلة والطلاب"
-                );
-
-        root.addView(
-                teacher,
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        15
-                )
-        );
-
-        student.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        showStudentLogin();
-                    }
-                }
-        );
-
-        teacher.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        showTeacherLogin();
-                    }
-                }
-        );
-
-        root.addView(
-                tv(
-                        "❖  ───── ✦ ─────  ❖",
-                        20,
-                        GOLD,
-                        Gravity.CENTER
-                )
-        );
-
-        setContentView(
-                scroll(root)
-        );
-    }
-
-    private LinearLayout roleCard(
-            String icon,
-            String title,
-            String description
-    ) {
-
-        LinearLayout card = new LinearLayout(this);
-
-        card.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        card.setGravity(
-                Gravity.CENTER
-        );
-
-        card.setPadding(
-                20,
-                22,
-                20,
-                22
-        );
-
-        card.setBackground(
-                outlinedCard()
-        );
-
-        card.addView(
-                tv(
-                        icon,
-                        30,
-                        GOLD,
-                        Gravity.CENTER
-                )
-        );
-
-        TextView t = tv(
-                title,
-                23,
-                WHITE,
-                Gravity.CENTER
-        );
-
-        t.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        card.addView(t);
-
-        card.addView(
-                tv(
-                        description,
-                        14,
-                        GRAY,
-                        Gravity.CENTER
-                ),
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        0
-                )
-        );
-
-        return card;
-    }
-
-    // =========================
-    // دخول الطالب
-    // =========================
-
-    private void showStudentLogin() {
-
-        LinearLayout root = baseLayout();
-
-        root.addView(
-                ornament(),
-                lp(
-                        -1,
-                        -2,
-                        10,
-                        15
-                )
-        );
-
-        TextView title = tv(
-                "دخول الطالب",
-                29,
-                GOLD,
-                Gravity.CENTER
-        );
-
-        title.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        root.addView(title);
-
-        root.addView(
-                tv(
-                        "اكتب بياناتك للدخول إلى الامتحان",
-                        16,
-                        WHITE,
-                        Gravity.CENTER
-                ),
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        20
-                )
-        );
-
-        LinearLayout card = new LinearLayout(this);
-
-        card.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        card.setPadding(
-                20,
-                25,
-                20,
-                25
-        );
-
-        card.setBackground(
-                outlinedCard()
-        );
-
-        card.addView(
-                tv(
-                        "اسم الطالب",
-                        17,
-                        GOLD_LIGHT,
-                        Gravity.RIGHT
-                )
-        );
-
-        EditText name =
-                input("اكتب اسمك");
-
-        card.addView(
-                name,
-                lp(
-                        -1,
-                        58,
-                        5,
-                        18
-                )
-        );
-
-        card.addView(
-                tv(
-                        "كود الامتحان",
-                        17,
-                        GOLD_LIGHT,
-                        Gravity.RIGHT
-                )
-        );
-
-        EditText code =
-                input("اكتب كود الامتحان");
-
-        card.addView(
-                code,
-                lp(
-                        -1,
-                        58,
-                        5,
-                        20
-                )
-        );
-
-        Button login =
-                goldButton(
-                        "دخول إلى الامتحان"
-                );
-
-        card.addView(
-                login,
-                lp(
-                        -1,
-                        58,
-                        5,
-                        5
-                )
-        );
-
-        root.addView(
-                card,
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        15
-                )
-        );
-
-        Button back =
-                outlineButton("رجوع");
-
-        root.addView(
-                back,
-                lp(
-                        -1,
-                        55,
-                        5,
-                        5
-                )
-        );
-
-        login.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-
-                        String n =
-                                name.getText()
-                                        .toString()
-                                        .trim();
-
-                        String c =
-                                code.getText()
-                                        .toString()
-                                        .trim();
-
-                        if (n.isEmpty()) {
-
-                            Toast.makeText(
-                                    MainActivity.this,
-                                    "اكتب اسم الطالب أولاً",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-
-                            return;
-                        }
-
-                        if (c.isEmpty()) {
-
-                            Toast.makeText(
-                                    MainActivity.this,
-                                    "اكتب كود الامتحان أولاً",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-
-                            return;
-                        }
-
-                        studentName = n;
-                        examCode = c;
-
-                        startExam();
-                    }
-                }
-        );
-
-        back.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        showRoles();
-                    }
-                }
-        );
-
-        setContentView(
-                scroll(root)
-        );
-    }
-
-    // =========================
-    // بداية الامتحان
-    // =========================
-
-    private void startExam() {
-
-        currentQuestion = 0;
-        score = 0;
-
-        timeLeft =
-                5 * 60 * 1000;
-
-        for (int i = 0;
-             i < selectedAnswers.length;
-             i++) {
-
-            selectedAnswers[i] = -1;
-        }
-
-        showExam();
-
-        startTimer();
-    }
-
-    // =========================
-    // شاشة الامتحان
-    // =========================
-
-    private void showExam() {
-
-        LinearLayout root = baseLayout();
-
-        TextView title = tv(
-                "امتحان المايسترو",
-                26,
-                GOLD,
-                Gravity.CENTER
-        );
-
-        title.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        root.addView(
-                title,
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        5
-                )
-        );
-
-        root.addView(
-                tv(
-                        "الطالب: " + studentName,
-                        15,
-                        GOLD_LIGHT,
-                        Gravity.RIGHT
-                ),
-                lp(
-                        -1,
-                        -2,
-                        2,
-                        5
-                )
-        );
-
-        root.addView(
-                tv(
-                        "كود الامتحان: " + examCode,
-                        13,
-                        GRAY,
-                        Gravity.RIGHT
-                ),
-                lp(
-                        -1,
-                        -2,
-                        2,
-                        8
-                )
-        );
-
-        timerView = tv(
-                "05:00",
-                20,
-                GOLD,
-                Gravity.CENTER
-        );
-
-        timerView.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        root.addView(
-                timerView,
-                lp(
-                        -1,
-                        45,
-                        5,
-                        8
-                )
-        );
-
-        TextView counter = tv(
-                "السؤال "
-                        + (currentQuestion + 1)
-                        + " من "
-                        + questions.length,
                 16,
-                WHITE,
-                Gravity.CENTER
+                textColor(),
+                false
         );
 
-        root.addView(
-                counter,
-                lp(
-                        -1,
-                        -2,
-                        3,
-                        12
-                )
+        subtitle.setGravity(Gravity.CENTER);
+        subtitle.setPadding(0, dp(5), 0, 0);
+
+        hero.addView(subtitle);
+
+        TextView decoration = text(
+                "✦  ✦  ✦  منصة المايسترو التعليمية  ✦  ✦  ✦",
+                12,
+                GOLD,
+                false
         );
 
-        LinearLayout card =
-                new LinearLayout(this);
+        decoration.setGravity(Gravity.CENTER);
+        decoration.setPadding(0, dp(13), 0, 0);
 
-        card.setOrientation(
-                LinearLayout.VERTICAL
+        hero.addView(decoration);
+
+        content.addView(
+                hero,
+                lp(-1, -2, 0, 0, 0, 14)
         );
 
-        card.setPadding(
+        TextView choose = text(
+                "اختار القسم",
                 20,
-                22,
-                20,
-                22
+                textColor(),
+                true
         );
 
-        card.setBackground(
-                outlinedCard()
+        choose.setGravity(Gravity.RIGHT);
+
+        content.addView(
+                choose,
+                lp(-1, -2, 0, 4, 0, 10)
         );
 
-        TextView q =
-                tv(
-                        questions[currentQuestion],
-                        20,
-                        WHITE,
-                        Gravity.RIGHT
-                );
-
-        q.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        card.addView(
-                q,
-                lp(
-                        -1,
-                        -2,
-                        0,
-                        18
-                )
-        );
-
-        RadioGroup group =
-                new RadioGroup(this);
-
-        group.setOrientation(
-                RadioGroup.VERTICAL
-        );
-
-        for (int i = 0;
-             i < choices[currentQuestion].length;
-             i++) {
-
-            RadioButton radio =
-                    new RadioButton(this);
-
-            radio.setId(
-                    View.generateViewId()
-            );
-
-            radio.setText(
-                    choices[currentQuestion][i]
-            );
-
-            radio.setTextSize(17);
-            radio.setTextColor(WHITE);
-
-            radio.setButtonTintList(
-                    ColorStateList.valueOf(GOLD)
-            );
-
-            radio.setGravity(
-                    Gravity.RIGHT |
-                            Gravity.CENTER_VERTICAL
-            );
-
-            group.addView(
-                    radio,
-                    lp(
-                            -1,
-                            50,
-                            3,
-                            3
-                    )
-            );
-        }
-
-        card.addView(group);
-
-        root.addView(
-                card,
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        15
-                )
-        );
-
-        Button next =
-                goldButton(
-                        currentQuestion ==
-                                questions.length - 1
-                                ? "تسليم الامتحان"
-                                : "السؤال التالي"
-                );
-
-        root.addView(
-                next,
-                lp(
-                        -1,
-                        58,
-                        5,
-                        8
-                )
-        );
-
-        Button exit =
-                outlineButton(
-                        "خروج من الامتحان"
-                );
-
-        root.addView(
-                exit,
-                lp(
-                        -1,
-                        52,
-                        5,
-                        5
-                )
-        );
-
-        next.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-
-                        int selected = -1;
-
-                        for (int i = 0;
-                             i < group.getChildCount();
-                             i++) {
-
-                            RadioButton r =
-                                    (RadioButton)
-                                            group.getChildAt(i);
-
-                            if (r.isChecked()) {
-
-                                selected = i;
-                                break;
-                            }
-                        }
-
-                        if (selected == -1) {
-
-                            Toast.makeText(
-                                    MainActivity.this,
-                                    "اختار إجابة أولاً",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-
-                            return;
-                        }
-
-                        selectedAnswers[currentQuestion] =
-                                selected;
-
-                        if (currentQuestion ==
-                                questions.length - 1) {
-
-                            finishExam();
-
-                        } else {
-
-                            currentQuestion++;
-
-                            showExam();
-                        }
-                    }
-                }
-        );
-
-        exit.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-
-                        if (examTimer != null) {
-                            examTimer.cancel();
-                            examTimer = null;
-                        }
-
-                        showStudentLogin();
-                    }
-                }
-        );
-
-        setContentView(
-                scroll(root)
-        );
-    }
-
-    // =========================
-    // المؤقت
-// المؤقت
-    // =========================
-
-    private void startTimer() {
-
-        if (examTimer != null) {
-            examTimer.cancel();
-        }
-
-        examTimer =
-                new CountDownTimer(
-                        timeLeft,
-                        1000
-                ) {
-
-                    @Override
-                    public void onTick(
-                            long millis
-                    ) {
-
-                        timeLeft =
-                                millis;
-
-                        if (timerView != null) {
-
-                            timerView.setText(
-                                    formatTime(millis)
-                            );
-
-                            if (millis <= 30000) {
-
-                                timerView.setTextColor(
-                                        RED
-                                );
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onFinish() {
-
-                        timeLeft = 0;
-
-                        examTimer = null;
-
-                        Toast.makeText(
-                                MainActivity.this,
-                                "انتهى وقت الامتحان",
-                                Toast.LENGTH_LONG
-                        ).show();
-
-                        calculateScore();
-                    }
-                };
-
-        examTimer.start();
-    }
-
-    private String formatTime(
-            long millis
-    ) {
-
-        long seconds =
-                millis / 1000;
-
-        long minutes =
-                seconds / 60;
-
-        seconds =
-                seconds % 60;
-
-        return String.format(
-                Locale.US,
-                "%02d:%02d",
-                minutes,
-                seconds
-        );
-    }
-
-    // =========================
-    // النتيجة
-    // =========================
-
-    private void finishExam() {
-
-        if (examTimer != null) {
-
-            examTimer.cancel();
-            examTimer = null;
-        }
-
-        calculateScore();
-    }
-
-    private void calculateScore() {
-
-        score = 0;
-
-        for (int i = 0;
-             i < correctAnswers.length;
-             i++) {
-
-            if (selectedAnswers[i] ==
-                    correctAnswers[i]) {
-
-                score++;
-            }
-        }
-
-        showResult();
-    }
-
-    private void showResult() {
-
-        LinearLayout root = baseLayout();
-
-        root.addView(
-                ornament(),
-                lp(
-                        -1,
-                        -2,
-                        10,
-                        15
-                )
-        );
-
-        TextView title =
-                tv(
-                        "نتيجة الامتحان",
-                        30,
-                        GOLD,
-                        Gravity.CENTER
-                );
-
-        title.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        root.addView(title);
-
-        root.addView(
-                tv(
-                        "الطالب: "
-                                + studentName,
-                        17,
-                        WHITE,
-                        Gravity.CENTER
+        LinearLayout roles = horizontal();
+
+        roles.addView(
+                roleCard(
+                        "👨‍🎓",
+                        "طالب",
+                        "الامتحانات والنتائج",
+                        true
                 ),
-                lp(
-                        -1,
-                        -2,
-                        12,
-                        5
-                )
-        );
-
-        LinearLayout card =
-                new LinearLayout(this);
-
-        card.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        card.setGravity(
-                Gravity.CENTER
-        );
-
-        card.setPadding(
-                25,
-                30,
-                25,
-                30
-        );
-
-        card.setBackground(
-                outlinedCard()
-        );
-
-        TextView scoreText =
-                tv(
-                        score
-                                + " / "
-                                + questions.length,
-                        45,
-                        GOLD,
-                        Gravity.CENTER
-                );
-
-        scoreText.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        card.addView(scoreText);
-
-        int wrong =
-                questions.length - score;
-
-        card.addView(
-                tv(
-                        "الإجابات الصحيحة: "
-                                + score,
-                        17,
-                        WHITE,
-                        Gravity.CENTER
-                ),
-                lp(
-                        -1,
-                        -2,
-                        12,
-                        5
-                )
-        );
-
-        card.addView(
-                tv(
-                        "الإجابات الخاطئة: "
-                                + wrong,
-                        17,
-                        GOLD_LIGHT,
-                        Gravity.CENTER
-                )
-        );
-
-        root.addView(
-                card,
-                lp(
-                        -1,
-                        -2,
-                        20,
-                        20
-                )
-        );
-
-        Button again =
-                goldButton(
-                        "العودة إلى الطالب"
-                );
-
-        root.addView(
-                again,
-                lp(
-                        -1,
-                        58,
-                        5,
-                        10
-                )
-        );
-
-        again.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        showStudentLogin();
-                    }
-                }
-        );
-
-        setContentView(
-                scroll(root)
-        );
-    }
-
-    // =========================
-    // دخول المدرس
-// =========================
-
-    private void showTeacherLogin() {
-
-        LinearLayout root =
-                baseLayout();
-
-        root.addView(
-                ornament(),
-                lp(
-                        -1,
-                        -2,
-                        10,
-                        15
-                )
-        );
-
-        TextView title =
-                tv(
-                        "منطقة المدرس",
-                        29,
-                        GOLD,
-                        Gravity.CENTER
-                );
-
-        title.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        root.addView(title);
-
-        root.addView(
-                tv(
-                        "إدارة منصة المايسترو",
-                        16,
-                        WHITE,
-                        Gravity.CENTER
-                ),
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        20
-                )
-        );
-
-        LinearLayout card =
-                new LinearLayout(this);
-
-        card.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        card.setPadding(
-                20,
-                25,
-                20,
-                25
-        );
-
-        card.setBackground(
-                outlinedCard()
-        );
-
-        card.addView(
-                tv(
-                        "اسم المدرس",
-                        17,
-                        GOLD_LIGHT,
-                        Gravity.RIGHT
-                )
-        );
-
-        EditText teacherName =
-                input(
-                        "مثال: مستر شريف هيبه"
-                );
-
-        card.addView(
-                teacherName,
-                lp(
-                        -1,
-                        58,
-                        5,
-                        15
-                )
-        );
-
-        card.addView(
-                tv(
-                        "كود الدخول",
-                        17,
-                        GOLD_LIGHT,
-                        Gravity.RIGHT
-                )
-        );
-
-        EditText teacherCode =
-                input(
-                        "اكتب كود الدخول"
-                );
-
-        teacherCode.setInputType(
-                android.text.InputType.TYPE_CLASS_NUMBER
-        );
-
-        card.addView(
-                teacherCode,
-                lp(
-                        -1,
-                        58,
-                        5,
-                        20
-                )
-        );
-
-        Button login =
-                goldButton(
-                        "دخول لوحة المدرس"
-                );
-
-        card.addView(
-                login,
-                lp(
-                        -1,
-                        58,
-                        5,
-                        5
-                )
-        );
-
-        root.addView(
-                card,
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        15
-                )
-        );
-
-        Button back =
-                outlineButton("رجوع");
-
-        root.addView(
-                back,
-                lp(
-                        -1,
-                        55,
-                        5,
-                        5
-                )
-        );
-
-        login.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-
-                        String code =
-                                teacherCode
-                                        .getText()
-                                        .toString()
-                                        .trim();
-
-                        if (!"1234".equals(code)) {
-
-                            Toast.makeText(
-                                    MainActivity.this,
-                                    "كود المدرس غير صحيح",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-
-                            return;
-                        }
-
-                        showTeacherDashboard();
-                    }
-                }
-        );
-
-        back.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        showRoles();
-                    }
-                }
-        );
-
-        setContentView(
-                scroll(root)
-        );
-    }
-
-    // =========================
-    // لوحة المدرس
-    // =========================
-
-    private void showTeacherDashboard() {
-
-        LinearLayout root =
-                baseLayout();
-
-        root.addView(
-                ornament(),
-                lp(
-                        -1,
-                        -2,
-                        10,
-                        12
-                )
-        );
-
-        TextView title =
-                tv(
-                        "لوحة تحكم المدرس",
-                        28,
-                        GOLD,
-                        Gravity.CENTER
-                );
-
-        title.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        root.addView(title);
-
-        root.addView(
-                tv(
-                        "المايسترو شريف هيبه",
-                        18,
-                        WHITE,
-                        Gravity.CENTER
-                ),
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        20
-                )
-        );
-
-        addTeacherCard(
-                root,
-                "📝",
-                "الامتحانات",
-                "إضافة وتعديل وحذف الامتحانات"
-        );
-
-        addTeacherCard(
-                root,
-                "❓",
-                "بنك الأسئلة",
-                "إدارة الأسئلة والاختيارات والإجابات"
-        );
-
-        addTeacherCard(
-                root,
-                "🔑",
-                "أكواد الامتحانات",
-                "إنشاء وإدارة أكواد دخول الطلاب"
-        );
-
-        addTeacherCard(
-                root,
-                "👥",
-                "الطلاب والنتائج",
-                "متابعة الطلاب والدرجات والنتائج"
-        );
-
-        addTeacherCard(
-                root,
-                "📚",
-                "المذكرات",
-                "إدارة المذكرات والمواد التعليمية"
-        );
-
-        addTeacherCard(
-                root,
-                "⚙",
-                "إعدادات المدرس",
-                "إعدادات الحساب والمنصة"
-        );
-
-        Button logout =
-                outlineButton(
-                        "تسجيل الخروج"
-                );
-
-        root.addView(
-                logout,
-                lp(
-                        -1,
-                        55,
-                        15,
-                        10
-                )
-        );
-
-        logout.setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        showRoles();
-                    }
-                }
-        );
-
-        setContentView(
-                scroll(root)
-        );
-    }
-
-    private void addTeacherCard(
-            LinearLayout root,
-            String icon,
-            String title,
-            String description
-    ) {
-
-        LinearLayout card =
-                new LinearLayout(this);
-
-        card.setOrientation(
-                LinearLayout.HORIZONTAL
-        );
-
-        card.setGravity(
-                Gravity.CENTER_VERTICAL
-        );
-
-        card.setPadding(
-                18,
-                15,
-                18,
-                15
-        );
-
-        card.setBackground(
-                outlinedCard()
-        );
-
-        TextView iconView =
-                tv(
-                        icon,
-                        26,
-                        GOLD,
-                        Gravity.CENTER
-                );
-
-        card.addView(
-                iconView,
-                new LinearLayout.LayoutParams(
-                        55,
-                        55
-                )
-        );
-
-        LinearLayout info =
-                new LinearLayout(this);
-
-        info.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        info.setGravity(
-                Gravity.RIGHT
-        );
-
-        TextView t =
-                tv(
-                        title,
-                        19,
-                        WHITE,
-                        Gravity.RIGHT
-                );
-
-        t.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        info.addView(t);
-
-        info.addView(
-                tv(
-                        description,
-                        13,
-                        GRAY,
-                        Gravity.RIGHT
-                ),
-                lp(
-                        -1,
-                        -2,
-                        3,
-                        0
-                )
-        );
-
-        card.addView(
-                info,
                 new LinearLayout.LayoutParams(
                         0,
-                        -2,
+                        dp(165),
                         1
                 )
         );
 
-        card.setOnClickListener(
-                new View.OnClickListener() {
+        roles.addView(spaceW(10));
 
-                    @Override
-                    public void onClick(View v) {
-
-                        Toast.makeText(
-                                MainActivity.this,
-                                "هذا القسم سنفعّله في المرحلة التالية",
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                }
-        );
-
-        root.addView(
-                card,
-                lp(
-                        -1,
-                        -2,
-                        5,
-                        10
+        roles.addView(
+                roleCard(
+                        "👨‍🏫",
+                        "مدرس",
+                        "إدارة الامتحانات والطلاب",
+                        false
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(165),
+                        1
                 )
         );
+
+        content.addView(roles);
+
+        content.addView(sectionTitle("أقسام المايسترو"));
+
+        LinearLayout row1 = horizontal();
+
+        row1.addView(
+                infoCard(
+                        "📝",
+                        "الامتحانات",
+                        "امتحاناتك"
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(105),
+                        1
+                )
+        );
+
+        row1.addView(spaceW(8));
+
+        row1.addView(
+                infoCard(
+                        "📚",
+                        "المذكرات",
+                        "شرح ومراجعة"
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(105),
+                        1
+                )
+        );
+
+        row1.addView(spaceW(8));
+
+        row1.addView(
+                infoCard(
+                        "🤲",
+                        "الأذكار",
+                        "أذكار يومية"
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(105),
+                        1
+                )
+        );
+
+        content.addView(row1);
+
+        LinearLayout row2 = horizontal();
+
+        row2.addView(
+                infoCard(
+                        "🔔",
+                        "التحديثات",
+                        "آخر الأخبار"
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(105),
+                        1
+                )
+        );
+
+        row2.addView(spaceW(8));
+
+        row2.addView(
+                infoCard(
+                        "🏆",
+                        "الإنجازات",
+                        "تقدمك"
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(105),
+                        1
+                )
+        );
+
+        row2.addView(spaceW(8));
+
+        row2.addView(
+                infoCard(
+                        "⚙",
+                        "الإعدادات",
+                        "إعدادات التطبيق"
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(105),
+                        1
+                )
+        );
+
+        content.addView(
+                row2,
+                lp(-1, -2, 0, 8, 0, 0)
+        );
+
+        TextView footer = text(
+                "✦ المايسترو ✦\n\n" +
+                "مع المبرمج أو المطور محمود كليب\n" +
+                "للتواصل: 01112244710",
+                12,
+                GRAY,
+                false
+        );
+
+        footer.setGravity(Gravity.CENTER);
+        footer.setPadding(0, dp(20), 0, dp(5));
+
+        content.addView(footer);
+
+        root.addView(
+                scroll,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        0,
+                        1
+                )
+        );
+
+        root.addView(homeBottom());
+
+        setContentView(root);
     }
-                    }
+
+    private View roleCard(
+            String icon,
+            String title,
+            String subtitle,
+            boolean student
+    ) {
+
+        LinearLayout box = clickablePanel();
+
+        box.setGravity(Gravity.CENTER);
+        box.setPadding(
+                dp(8),
+                dp(12),
+                dp(8),
+                dp(12)
+        );
+
+        TextView iconText = text(
+                icon,
+                34,
+                GOLD,
+                false
+        );
+
+        iconText.setGravity(Gravity.CENTER);
+
+        box.addView(
+                iconText,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(50)
+                )
+        );
+
+        TextView titleText = text(
+                title,
+                20,
+                textColor(),
+                true
+        );
+
+        titleText.setGravity(Gravity.CENTER);
+
+        box.addView(titleText);
+
+        TextView subText = text(
+                subtitle,
+                11,
+                GRAY,
+                false
+        );
+
+        subText.setGravity(Gravity.CENTER);
+        subText.setPadding(0, dp(4), 0, 0);
+
+        box.addView(subText);
+
+        box.setOnClickListener(v -> {
+
+            if (student) {
+                showStudentLogin();
+            } else {
+                showTeacherLogin();
+            }
+
+        });
+
+        return box;
+    }
+
+    private View infoCard(
+            String icon,
+            String title,
+            String subtitle
+    ) {
+
+        LinearLayout box = clickablePanel();
+
+        box.setGravity(Gravity.CENTER);
+        box.setPadding(
+                dp(4),
+                dp(8),
+                dp(4),
+                dp(8)
+        );
+
+        TextView iconText = text(
+                icon,
+                25,
+                GOLD,
+                false
+        );
+
+        iconText.setGravity(Gravity.CENTER);
+
+        box.addView(iconText);
+
+        TextView titleText = text(
+                title,
+                13,
+                textColor(),
+                true
+        );
+
+        titleText.setGravity(Gravity.CENTER);
+
+        box.addView(titleText);
+
+        TextView subText = text(
+                subtitle,
+                9,
+                GRAY,
+                false
+        );
+
+        subText.setGravity(Gravity.CENTER);
+
+        box.addView(subText);
+
+        box.setOnClickListener(v ->
+                toast("اختار طالب أو مدرس من الشاشة الرئيسية")
+        );
+
+        return box;
+    }
+
+    private LinearLayout homeBottom() {
+
+        LinearLayout bar = navBar();
+
+        bar.addView(
+                navItem(
+                        "⌂",
+                        "الرئيسية",
+                        v -> showHome()
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                )
+        );
+
+        bar.addView(
+                navItem(
+                        "📝",
+                        "الامتحانات",
+                        v -> toast("اختار طالب أو مدرس أولاً")
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                )
+        );
+
+        bar.addView(
+                navItem(
+                        "🤲",
+                        "الأذكار",
+                        v -> showAzkar(false)
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                )
+        );
+
+        bar.addView(
+                navItem(
+                        "⚙",
+                        "الإعدادات",
+                        v -> showSettings(false)
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                )
+        );
+
+        return bar;
+    }
+
+    /* =========================================================
+       STUDENT LOGIN
+       ========================================================= */
+
+    private void showStudentLogin() {
+
+        role = "student";
+
+        LinearLayout page = pageBase(
+                "دخول الطالب",
+                "ادخل اسمك وكود الامتحان"
+        );
+
+        EditText name = input("الاسم الثلاثي");
+        EditText code = input("كود الامتحان");
+
+        page.addView(label("اسم الطالب"));
+
+        page.addView(
+                name,
+                lp(-1, dp(58), 0, 0, 0, 12)
+        );
+
+        page.addView(label("كود الامتحان"));
+
+        page.addView(
+                code,
+                lp(-1, dp(58), 0, 0, 0, 16)
+        );
+
+        Button enter = primary("دخول إلى الامتحان");
+
+        page.addView(
+                enter,
+                lp(-1, dp(56), 0, 0, 0, 10)
+        );
+
+        Button account = secondary("الدخول إلى حسابي");
+
+        page.addView(
+                account,
+                lp(-1, dp(52), 0, 0, 0, 10)
+        );
+
+        enter.setOnClickListener(v -> {
+
+            String studentName =
+                    name.getText().toString().trim();
+
+            String examCode =
+                    code.getText().toString().trim();
+
+            if (studentName.isEmpty()) {
+                toast("اكتب اسم الطالب");
+                return;
+            }
+
+            if (examCode.isEmpty()) {
+                toast("اكتب كود الامتحان");
+                return;
+            }
+
+            JSONObject exam =
+                    findExamByCode(examCode);
+
+            if (exam == null) {
+                toast("الكود غير صحيح أو غير موجود");
+                return;
+            }
+
+            if (isCodeUsed(
+                    examCode,
+                    studentName
+            )) {
+                toast("هذا الكود تم استخدامه من قبل");
+                return;
+            }
+
+            currentStudent = studentName;
+
+            prefs.edit()
+                    .putString(
+                            "last_student",
+                            studentName
+                    )
+                    .apply();
+
+            startExam(
+                    exam,
+                    examCode
+            );
+        });
+
+        account.setOnClickListener(v -> {
+
+            String n =
+                    name.getText().toString().trim();
+
+            if (!n.isEmpty()) {
+                currentStudent = n;
+            } else {
+                currentStudent =
+                        prefs.getString(
+                                "last_student",
+                                ""
+                        );
+            }
+
+            if (currentStudent.isEmpty()) {
+                toast("اكتب اسم الطالب أولاً");
+                return;
+            }
+
+            showStudentHome();
+        });
+
+        addBack(page, this::showHome);
+
+        setPage(page, true);
+    }
+
+    /* =========================================================
+       STUDENT HOME
+       ========================================================= */
+
+    private void showStudentHome() {
+
+        if (currentStudent.isEmpty()) {
+            currentStudent =
+                    prefs.getString(
+                            "last_student",
+                            ""
+                    );
+        }
+
+        if (currentStudent.isEmpty()) {
+            showStudentLogin();
+            return;
+        }
+
+        role = "student";
+
+        LinearLayout page = pageBase(
+                "أهلاً يا " + currentStudent,
+                "لوحة الطالب الرئيسية"
+        );
+
+        page.addView(
+                sectionTitle("اختار القسم")
+        );
+
+        LinearLayout row1 = horizontal();
+
+        row1.addView(
+                actionCard(
+                        "📝",
+                        "امتحاناتي",
+                        "الامتحانات المتاحة",
+                        v -> showStudentExams()
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(130),
+                        1
+                )
+        );
+
+        row1.addView(spaceW(10));
+
+        row1.addView(
+                actionCard(
+                        "📊",
+                        "نتائجي",
+                        "درجات وتصحيح",
+                        v -> showStudentResults()
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(130),
+                        1
+                )
+        );
+
+        page.addView(row1);
+
+        LinearLayout row2 = horizontal();
+
+        row2.addView(
+                actionCard(
+                        "📚",
+                        "المذكرات",
+                        "شرح ومراجعة",
+                        v -> showNotes(false)
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(130),
+                        1
+                )
+        );
+
+        row2.addView(spaceW(10));
+
+        row2.addView(
+                actionCard(
+                        "🤲",
+                        "الأذكار",
+                        "أذكار يومية",
+                        v -> showAzkar(true)
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(130),
+                        1
+                )
+        );
+
+        page.addView(
+                row2,
+                lp(-1, -2, 0, 10, 0, 0)
+        );
+
+        LinearLayout row3 = horizontal();
+
+        row3.addView(
+                actionCard(
+                        "🏆",
+                        "إنجازاتي",
+                        "تقدمك",
+                        v -> showAchievements()
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(130),
+                        1
+                )
+        );
+
+        row3.addView(spaceW(10));
+
+        row3.addView(
+                actionCard(
+                        "🔔",
+                        "التحديثات",
+                        "آخر الأخبار",
+                        v -> showUpdates()
+                ),
+                new LinearLayout.LayoutParams(
+                        0,
+                        dp(130),
+                        1
+                )
+        );
+
+        page.addView(row3);
+
+        page.addView(
+                messageCard(
+                        "ملاحظة\n\n" +
+                        "المدرس هو المسؤول عن إنشاء الامتحانات والأسئلة والأكواد والمذكرات.\n" +
+                        "لا توجد أسئلة تجريبية داخل التطبيق."
+                )
+        );
+
+        Button logout =
+                primary("تسجيل الخروج");
+
+        page.addView(
+                logout,
+                lp(-1, dp(54), 0, 18, 0, 8)
+        );
+
+        logout.setOnClickListener(v -> {
+
+            currentStudent = "";
+
+            prefs.edit()
+                    .remove("last_student")
+                    .apply();
+
+            showHome();
+        });
+
+        addBack(page, this::showHome);
+
+        setPage(page, true);
+    }
+
+    /* =========================================================
+       STUDENT EXAMS
+       ========================================================= */
+
+    private void showStudentExams() {
+
+        LinearLayout page = pageBase(
+                "امتحاناتي",
+                "الامتحانات التي أضافها المدرس"
+        );
+
+        JSONArray exams =
+                readArray("exams");
