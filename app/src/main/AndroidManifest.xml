@@ -8,8 +8,7 @@
         android:theme="@style/AppTheme"
         android:label="المايسترو"
         android:allowBackup="true"
-        android:supportsRtl="true"
-        android:icon="@drawable/maestro_icon">
+        android:supportsRtl="true">
 
         <activity
             android:name=".MainActivity"
