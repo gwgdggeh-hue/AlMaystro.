@@ -1,3 +1,4 @@
+```xml
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -6,6 +7,7 @@
     <application
         android:theme="@style/AppTheme"
         android:label="المايسترو"
+        android:icon="@drawable/maestro_icon"
         android:allowBackup="true"
         android:supportsRtl="true">
 
@@ -23,3 +25,9 @@
     </application>
 
 </manifest>
+```
+
+**اعمل حفظ للملف فقط.**
+بعدها **ما تعملش Build لسه**.
+
+قولّي لما تحفظه، ونروح للخطوة التالية ونختبر إن الأيقونة اتربطت صح.
