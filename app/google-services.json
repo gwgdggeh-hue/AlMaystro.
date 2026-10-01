@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "97349343319",
+    "project_id": "el-maestro-eecef",
+    "storage_bucket": "el-maestro-eecef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:97349343319:android:26d379f3aade7eec8dab12",
+        "android_client_info": {
+          "package_name": "com.almaystro.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2uwSrMkPsw4yrFTrdRRobeW2cn23TgD8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
